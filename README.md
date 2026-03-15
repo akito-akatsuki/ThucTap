@@ -1,42 +1,198 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📦 Hệ Thống Quản Lý Kho Thông Minh
 
-## Getting Started
+Đây là hệ thống **quản lý kho hiện đại** được xây dựng bằng **Next.js, Supabase và AI dự đoán**.
+Ứng dụng giúp doanh nghiệp quản lý tồn kho, theo dõi sản phẩm theo thời gian thực và dự đoán nhu cầu bán hàng trong tương lai.
 
-REMEMBER AFTER DOWNLOAD:
+---
+
+# 🚀 Tính Năng
+
+## 📦 Quản Lý Sản Phẩm
+
+- Thêm / Sửa / Xóa sản phẩm
+- Theo dõi tồn kho theo thời gian thực
+- Nhập kho và lưu lịch sử
+- Cảnh báo khi tồn kho thấp
+
+## 📊 Thống Kê Dashboard
+
+- Tổng số sản phẩm
+- Tổng số lượng tồn kho
+- Trạng thái sản phẩm:
+  - 🟢 Bình thường
+  - 🟡 Sắp hết hàng
+  - 🔴 Hết hàng
+
+## 🤖 AI Dự Đoán
+
+Hệ thống AI có thể:
+
+- Dự đoán **nhu cầu bán hàng 7 ngày tới**
+- Tính **trung bình số lượng bán mỗi ngày**
+- Dự đoán **số ngày còn lại trước khi hết hàng**
+- Hiển thị biểu đồ trực quan
+
+## 📡 Cập Nhật Realtime
+
+Sử dụng **Supabase Realtime**
+
+Dashboard sẽ tự động cập nhật khi:
+
+- Có thay đổi sản phẩm
+- Có nhập kho
+- Có giao dịch bán
+
+## 🔐 Phân Quyền Người Dùng
+
+| Role   | Quyền                                  |
+| ------ | -------------------------------------- |
+| Admin  | Toàn quyền (thêm / sửa / xóa sản phẩm) |
+| Seller | Chỉ được nhập kho                      |
+
+## 📷 Hệ Thống QR Code
+
+Mỗi sản phẩm sẽ có:
+
+- Barcode riêng
+- QR code để quét
+- Có thể chia sẻ QR cho nhân viên
+
+## 📧 Gửi Email Tự Động
+
+Khi thêm sản phẩm mới:
+
+- Hệ thống sẽ tự động gửi **QR code tới email của Seller**
+
+---
+
+# 🛠 Công Nghệ Sử Dụng
+
+### Frontend
+
+- **Next.js 14 (App Router)**
+- React
+- Recharts (biểu đồ)
+- React Hot Toast (thông báo)
+
+### Backend
+
+- **Supabase**
+- PostgreSQL
+- Supabase Realtime
+
+### AI
+
+- API dự đoán bán hàng
+
+### Khác
+
+- QR Code Generator
+- Nodemailer (gửi email)
+
+---
+
+# ⚙️ Cài Đặt
+
+Clone repository
 
 ```bash
-npm i
+git clone https://github.com/your-repo/inventory-system.git
+cd inventory-system
 ```
 
-After that, run the development server:
+Cài đặt thư viện
+
+```bash
+npm install
+```
+
+---
+
+# 🔑 Cấu Hình Environment
+
+Tạo file `.env.local`
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+```
+
+---
+
+# ▶️ Chạy Project
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Mở trình duyệt tại:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+# 📂 Cấu Trúc Thư Mục
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+ ├ api/
+ │   ├ products/
+ │   ├ import/
+ │   ├ ai/
+ │   └ users/
+ │
+ ├ dashboard/
+ │   └ page.jsx
+ │
+components/
+ ├ InputModal.jsx
+ ├ ConfirmModal.jsx
+ └ AIBot.jsx
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 📈 Biểu Đồ Dự Đoán AI
 
-## Deploy on Vercel
+Hệ thống AI sẽ dự đoán **7 ngày bán hàng tiếp theo** dựa trên dữ liệu bán trước đó và hiển thị bằng biểu đồ tương tác.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 🔄 Tồn Kho Realtime
+
+Nhờ Supabase Realtime:
+
+- Tồn kho cập nhật **ngay lập tức**
+- Không cần refresh trang
+- Dashboard luôn hiển thị dữ liệu mới nhất
+
+---
+
+# 🌐 Triển Khai
+
+Cách dễ nhất để deploy project:
+
+**Vercel**
+
+```bash
+vercel deploy
+```
+
+Project hoạt động tốt với:
+
+- Vercel
+- Supabase
+- Node.js 18+
+
+---
+
+# 👨‍💻 Tác Giả
+
+Developed by **Pham Hoan** **DangHieu** **QuangThien**
+
+Internship Project – Smart Inventory System
