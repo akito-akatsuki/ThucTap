@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase";
+import QRCode from "qrcode";
+import nodemailer from "nodemailer";
 
 /* =========================
 GET PRODUCTS / GET BY BARCODE
@@ -135,8 +137,52 @@ export async function POST(req) {
       stock: 0,
     });
 
+    /* =========================
+    GENERATE QR
+    ========================= */
+
+    const qr = await QRCode.toDataURL(barcode.toString());
+
+    /* =========================
+    GET SELLERS
+    ========================= */
+
+    const { data: sellers } = await supabase
+      .from("users")
+      .select("email")
+      .eq("role", "seller");
+
+    /* =========================
+    SEND EMAIL
+    ========================= */
+
+    if (sellers && sellers.length > 0) {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      for (const s of sellers) {
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: s.email,
+          subject: "New Product QR Code",
+          html: `
+            <h2>${name}</h2>
+            <p>Barcode: ${barcode}</p>
+            <p>Scan this QR:</p>
+            <img src="${qr}" />
+          `,
+        });
+      }
+    }
+
     return Response.json({
       data,
+      qr,
     });
   } catch (err) {
     return Response.json({

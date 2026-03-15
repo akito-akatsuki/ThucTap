@@ -22,7 +22,7 @@ export default function Dashboard() {
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-
+  const [qr, setQr] = useState(null);
   const [role, setRole] = useState(null);
 
   const colors = ["#2563eb", "#16a34a", "#dc2626", "#9333ea", "#f59e0b"];
@@ -35,6 +35,11 @@ export default function Dashboard() {
     setProducts(json.data || []);
   };
 
+  /* SHOW QR */
+  const showQR = (barcode) => {
+    const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${barcode}`;
+    window.open(url);
+  };
   /* LOAD AI */
 
   const loadAI = async (productList) => {
@@ -122,7 +127,7 @@ export default function Dashboard() {
   const addProduct = async () => {
     if (!name || !price) return alert("Enter product info");
 
-    await fetch("/api/products", {
+    const res = await fetch("/api/products", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -132,6 +137,11 @@ export default function Dashboard() {
         price: Number(price),
       }),
     });
+
+    const json = await res.json(); // ⭐ thêm dòng này
+
+    console.log(json.qr); // ⭐ QR image base64
+    setQr(json.qr); // ⭐ lưu vào state để hiển thị
 
     setName("");
     setPrice("");
@@ -234,6 +244,7 @@ export default function Dashboard() {
                 <th style={th}>Product</th>
                 <th style={th}>Price</th>
                 <th style={th}>Stock</th>
+                <th style={th}>QR</th>
                 <th style={th}>Import</th>
                 <th style={th}>Delete</th>
               </tr>
@@ -261,6 +272,14 @@ export default function Dashboard() {
                       </span>
                     </td>
 
+                    {/* QR BUTTON */}
+                    <td style={td}>
+                      <button onClick={() => showQR(p.barcode)} style={qrBtn}>
+                        QR
+                      </button>
+                    </td>
+
+                    {/* IMPORT */}
                     <td style={td}>
                       <button
                         onClick={() => importStock(p.id)}
@@ -275,6 +294,7 @@ export default function Dashboard() {
                       </button>
                     </td>
 
+                    {/* DELETE */}
                     <td style={td}>
                       <button
                         onClick={() => deleteProduct(p.id)}
@@ -455,4 +475,13 @@ const stockBadge = {
   borderRadius: 20,
   fontWeight: 600,
   fontSize: 14,
+};
+
+const qrBtn = {
+  background: "#6366f1",
+  color: "white",
+  border: "none",
+  padding: "6px 10px",
+  borderRadius: 6,
+  cursor: "pointer",
 };
