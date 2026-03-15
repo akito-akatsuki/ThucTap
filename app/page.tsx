@@ -162,7 +162,7 @@ export default function Home() {
             </thead>
 
             <tbody>
-              {logs.slice(0, 10).map((log) => (
+              {logs.slice(0, 5).map((log) => (
                 <tr key={log.id} className="border-b">
                   <td className="py-2">{log.products?.name}</td>
 

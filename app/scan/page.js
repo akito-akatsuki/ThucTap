@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Scanner from "@/components/Scanner";
-
+import toast from "react-hot-toast";
 export default function ScanPage() {
   const router = useRouter();
 
@@ -35,7 +35,7 @@ export default function ScanPage() {
 
       if (!data.success) {
         if (!alertRef.current) {
-          alert(data.error);
+          toast.error(data.error);
           alertRef.current = true;
 
           setTimeout(() => {
@@ -55,7 +55,7 @@ export default function ScanPage() {
         if (existing) {
           if (existing.qty + 1 > existing.stock) {
             if (!alertRef.current) {
-              alert("Out of stock");
+              toast.error("Out of stock");
               alertRef.current = true;
 
               setTimeout(() => {
@@ -99,7 +99,7 @@ export default function ScanPage() {
         if (p.id === id) {
           if (p.qty + 1 > p.stock) {
             if (!alertRef.current) {
-              alert("Out of stock");
+              toast.error("Out of stock");
               alertRef.current = true;
 
               setTimeout(() => {
@@ -142,7 +142,7 @@ export default function ScanPage() {
 
   const goCheckout = () => {
     if (cart.length === 0) {
-      alert("Cart empty");
+      toast.error("Cart empty");
       return;
     }
 
@@ -156,142 +156,211 @@ export default function ScanPage() {
   ========================= */
 
   return (
-    <>
-      <div style={{ padding: 30, fontFamily: "Arial" }}>
-        <h2>📷 Scan Barcode</h2>
+    <div
+      style={{
+        padding: 40,
+        background: "#f8fafc",
+        minHeight: "100vh",
+        fontFamily: "Inter, Arial",
+      }}
+    >
+      <h1 style={{ marginBottom: 30 }}>🛒 POS Scanner</h1>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "360px 1fr",
+          gap: 30,
+        }}
+      >
+        {/* LEFT - SCANNER */}
 
         <div
           style={{
-            width: 320,
-            margin: "20px auto",
-            borderRadius: 10,
-            overflow: "hidden",
-            border: "2px solid #eee",
+            background: "white",
+            padding: 20,
+            borderRadius: 12,
+            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
           }}
         >
-          <Scanner onScan={handleScan} />
+          <h2 style={{ marginBottom: 15 }}>📷 Scan Barcode</h2>
+
+          <div
+            style={{
+              borderRadius: 10,
+              overflow: "hidden",
+              border: "2px solid #eee",
+            }}
+          >
+            <Scanner onScan={handleScan} />
+          </div>
         </div>
 
-        <h2>🧾 Invoice</h2>
-
-        <table
+        <div
           style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
             background: "white",
+            padding: 20,
+            borderRadius: 12,
+            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
           }}
         >
-          <thead>
-            <tr style={{ background: "#f4f4f4" }}>
-              <th style={{ padding: 12, textAlign: "left", width: "40%" }}>
-                Product
-              </th>
+          <h2 style={{ marginBottom: 20 }}>🧾 Invoice</h2>
 
-              <th style={{ width: "15%", textAlign: "center" }}>Price</th>
+          <div
+            style={{
+              maxHeight: 350,
+              overflowY: "auto",
+            }}
+          >
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                tableLayout: "fixed",
+              }}
+            >
+              <thead>
+                <tr style={{ background: "#f1f5f9" }}>
+                  <th style={{ padding: 12, textAlign: "left", width: "40%" }}>
+                    Product
+                  </th>
 
-              <th style={{ width: "20%", textAlign: "center" }}>Qty</th>
+                  <th style={{ textAlign: "center", width: "15%" }}>Price</th>
 
-              <th style={{ width: "15%", textAlign: "center" }}>Total</th>
+                  <th style={{ textAlign: "center", width: "20%" }}>Qty</th>
 
-              <th style={{ width: "10%" }}></th>
-            </tr>
-          </thead>
+                  <th style={{ textAlign: "center", width: "15%" }}>Total</th>
 
-          <tbody>
-            {cart.map((item) => (
-              <tr key={item.id} style={{ borderTop: "1px solid #eee" }}>
-                <td style={{ padding: 12 }}>{item.name}</td>
+                  <th style={{ width: "10%" }}></th>
+                </tr>
+              </thead>
 
-                <td style={{ textAlign: "center" }}>${item.price}</td>
+              <tbody>
+                {cart.map((item) => (
+                  <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
+                    <td style={{ padding: 12 }}>{item.name}</td>
 
-                <td
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <button
-                    onClick={() => decreaseQty(item.id)}
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 6,
-                      border: "1px solid #ddd",
-                      cursor: "pointer",
-                    }}
-                  >
-                    -
-                  </button>
+                    <td style={{ textAlign: "center" }}>${item.price}</td>
 
-                  <span
-                    style={{
-                      width: 40,
-                      textAlign: "center",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {item.qty}
-                  </span>
+                    <td
+                      style={{
+                        textAlign: "center",
+                        padding: 10,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
+                        <button
+                          onClick={() => decreaseQty(item.id)}
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 6,
+                            border: "1px solid #ddd",
+                            background: "white",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          -
+                        </button>
 
-                  <button
-                    onClick={() => increaseQty(item.id)}
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 6,
-                      border: "1px solid #ddd",
-                      cursor: "pointer",
-                    }}
-                  >
-                    +
-                  </button>
-                </td>
+                        <span
+                          style={{
+                            minWidth: 30,
+                            display: "inline-block",
+                            textAlign: "center",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {item.qty}
+                        </span>
 
-                <td style={{ textAlign: "center" }}>
-                  ${item.price * item.qty}
-                </td>
+                        <button
+                          onClick={() => increaseQty(item.id)}
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 6,
+                            border: "1px solid #ddd",
+                            background: "white",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </td>
 
-                <td style={{ textAlign: "center" }}>
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    style={{
-                      background: "red",
-                      color: "white",
-                      border: "none",
-                      padding: "6px 12px",
-                      borderRadius: 6,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    <td style={{ textAlign: "center" }}>
+                      ${item.price * item.qty}
+                    </td>
 
-        <h2 style={{ marginTop: 20 }}>Total: ${total}</h2>
+                    <td style={{ textAlign: "center" }}>
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        style={{
+                          background: "#dc2626",
+                          color: "white",
+                          border: "none",
+                          width: 30,
+                          height: 30,
+                          borderRadius: 6,
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        <button
-          onClick={goCheckout}
-          style={{
-            marginTop: 20,
-            padding: "12px 25px",
-            background: "green",
-            color: "white",
-            border: "none",
-            borderRadius: 8,
-            fontSize: 16,
-            cursor: "pointer",
-          }}
-        >
-          Checkout
-        </button>
+          <div
+            style={{
+              marginTop: 15,
+              padding: 12,
+              background: "#f1f5f9",
+              borderRadius: 8,
+              display: "flex",
+              justifyContent: "space-between",
+              fontWeight: "bold",
+              fontSize: 16,
+            }}
+          >
+            <span>Total</span>
+            <span>${total}</span>
+          </div>
+
+          <button
+            onClick={goCheckout}
+            style={{
+              width: "100%",
+              marginTop: 15,
+              padding: "14px",
+              background: "#16a34a",
+              color: "white",
+              border: "none",
+              borderRadius: 8,
+              fontSize: 16,
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            Checkout
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

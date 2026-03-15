@@ -12,6 +12,7 @@ export async function GET(req) {
   /* =========================
   SCAN BARCODE
   ========================= */
+
   if (barcode) {
     const { data, error } = await supabase
       .from("products")
@@ -36,7 +37,6 @@ export async function GET(req) {
       });
     }
 
-    /* FIX STOCK */
     const stock = data.inventory?.stock ?? data.inventory?.[0]?.stock ?? 0;
 
     if (stock <= 0) {
@@ -53,13 +53,13 @@ export async function GET(req) {
         name: data.name,
         price: data.price,
         barcode: data.barcode,
-        stock: stock,
+        stock,
       },
     });
   }
 
   /* =========================
-  GET ALL PRODUCTS (DASHBOARD)
+  GET ALL PRODUCTS
   ========================= */
 
   const { data, error } = await supabase.from("products").select(`
@@ -67,6 +67,7 @@ export async function GET(req) {
       name,
       barcode,
       price,
+      min_stock,
       inventory (
         stock
       )
@@ -114,6 +115,8 @@ export async function POST(req) {
 
     const barcode = generateBarcode();
 
+    /* CREATE PRODUCT */
+
     const { data, error } = await supabase
       .from("products")
       .insert({
@@ -137,24 +140,18 @@ export async function POST(req) {
       stock: 0,
     });
 
-    /* =========================
-    GENERATE QR
-    ========================= */
+    /* GENERATE QR */
 
     const qr = await QRCode.toDataURL(barcode.toString());
 
-    /* =========================
-    GET SELLERS
-    ========================= */
+    /* GET SELLERS */
 
     const { data: sellers } = await supabase
       .from("users")
       .select("email")
       .eq("role", "seller");
 
-    /* =========================
-    SEND EMAIL
-    ========================= */
+    /* SEND EMAIL BACKGROUND */
 
     if (sellers && sellers.length > 0) {
       const transporter = nodemailer.createTransport({
@@ -165,19 +162,27 @@ export async function POST(req) {
         },
       });
 
-      for (const s of sellers) {
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: s.email,
-          subject: "New Product QR Code",
-          html: `
-            <h2>${name}</h2>
-            <p>Barcode: ${barcode}</p>
-            <p>Scan this QR:</p>
-            <img src="${qr}" />
-          `,
-        });
-      }
+      setTimeout(async () => {
+        try {
+          await Promise.all(
+            sellers.map((s) =>
+              transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: s.email,
+                subject: "New Product QR Code",
+                html: `
+                  <h2>${name}</h2>
+                  <p>Barcode: ${barcode}</p>
+                  <p>Scan this QR:</p>
+                  <img src="${qr}" />
+                `,
+              }),
+            ),
+          );
+        } catch (err) {
+          console.log("Email error:", err);
+        }
+      }, 0);
     }
 
     return Response.json({
@@ -224,6 +229,52 @@ export async function DELETE(req) {
     return Response.json({
       success: false,
       error: "Delete failed",
+    });
+  }
+}
+
+/* =========================
+UPDATE PRODUCT
+========================= */
+
+export async function PUT(req) {
+  try {
+    const body = await req.json();
+    const { id, name, price, min_stock } = body;
+
+    if (!id) {
+      return Response.json({
+        success: false,
+        error: "Product id required",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("products")
+      .update({
+        name,
+        price,
+        min_stock,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      return Response.json({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    return Response.json({
+      success: true,
+      data,
+    });
+  } catch (err) {
+    return Response.json({
+      success: false,
+      error: "Update failed",
     });
   }
 }

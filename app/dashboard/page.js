@@ -13,12 +13,17 @@ import {
 } from "recharts";
 
 import AIBot from "@/components/AIBot";
+import InputModal from "@/components/InputModal";
+import toast from "react-hot-toast";
+import ConfirmModal from "@/components/ConfirmModal";
 import { supabase } from "@/lib/supabase";
 
 export default function Dashboard() {
   const [products, setProducts] = useState([]);
   const [predictions, setPredictions] = useState([]);
   const [chart, setChart] = useState([]);
+  const [modal, setModal] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -32,14 +37,21 @@ export default function Dashboard() {
   const loadProducts = async () => {
     const res = await fetch("/api/products");
     const json = await res.json();
-    setProducts(json.data || []);
+
+    const list = json.data || [];
+
+    setProducts(list);
+
+    loadAI(list);
   };
 
   /* SHOW QR */
+
   const showQR = (barcode) => {
     const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${barcode}`;
     window.open(url);
   };
+
   /* LOAD AI */
 
   const loadAI = async (productList) => {
@@ -55,7 +67,6 @@ export default function Dashboard() {
       });
 
       const json = await res.json();
-
       const ai = json.data || [];
 
       setPredictions(ai);
@@ -89,18 +100,38 @@ export default function Dashboard() {
   /* INIT */
 
   useEffect(() => {
-    const init = async () => {
-      const res = await fetch("/api/products");
-      const json = await res.json();
+    loadProducts();
+  }, []);
 
-      const productList = json.data || [];
+  /* REALTIME */
 
-      setProducts(productList);
+  useEffect(() => {
+    const channel = supabase
+      .channel("inventory-realtime")
 
-      loadAI(productList);
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "products" },
+        loadProducts,
+      )
+
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "inventory" },
+        loadProducts,
+      )
+
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "sales" },
+        loadProducts,
+      )
+
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-
-    init();
   }, []);
 
   /* GET ROLE */
@@ -125,73 +156,93 @@ export default function Dashboard() {
   /* ADD PRODUCT */
 
   const addProduct = async () => {
-    if (!name || !price) return alert("Enter product info");
+    if (!name.trim()) {
+      toast.error("Enter product name");
+      return;
+    }
 
-    const res = await fetch("/api/products", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name,
-        price: Number(price),
-      }),
-    });
+    if (!price) {
+      toast.error("Enter price");
+      return;
+    }
 
-    const json = await res.json(); // ⭐ thêm dòng này
+    if (isNaN(price)) {
+      toast.error("Price must be a number");
+      return;
+    }
 
-    console.log(json.qr); // ⭐ QR image base64
-    setQr(json.qr); // ⭐ lưu vào state để hiển thị
+    const loading = toast.loading("Adding product...");
 
-    setName("");
-    setPrice("");
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          price: Number(price),
+        }),
+      });
 
-    loadProducts();
+      const json = await res.json();
+
+      if (!res.ok || json.error) {
+        toast.dismiss(loading);
+        toast.error(json.error || "Add failed");
+        return;
+      }
+
+      setQr(json.qr);
+
+      setName("");
+      setPrice("");
+
+      toast.dismiss(loading);
+      toast.success("Product added");
+
+      loadProducts();
+    } catch (err) {
+      toast.dismiss(loading);
+      toast.error("Server error");
+    }
   };
 
-  /* DELETE PRODUCT */
+  /* DELETE */
 
-  const deleteProduct = async (id) => {
-    const confirmDelete = confirm("Delete this product permanently?");
-
-    if (!confirmDelete) return;
-
+  const deleteProduct = (id) => {
+    setConfirmModal(id);
+  };
+  const confirmDelete = async () => {
     await fetch("/api/products", {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        id: id,
-      }),
+      body: JSON.stringify({ id: confirmModal }),
     });
 
+    toast.success("Product deleted");
+
+    setConfirmModal(null);
     loadProducts();
+  };
+  /* EDIT PRODUCT */
+
+  const editProduct = (product) => {
+    setModal({
+      type: "edit",
+      product,
+    });
   };
 
   /* IMPORT STOCK */
 
-  const importStock = async (id) => {
-    const qty = prompt("Enter quantity");
-
-    if (!qty) return;
-
-    const res = await fetch("/api/import", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        product_id: id,
-        quantity: Number(qty),
-        user: "admin", // 🔥 thêm dòng này
-      }),
+  const importStock = (product) => {
+    setModal({
+      type: "import",
+      product,
     });
-
-    const data = await res.json();
-    console.log(data);
-
-    loadProducts(); // reload stock
   };
 
   const totalStock = products.reduce(
@@ -214,27 +265,34 @@ export default function Dashboard() {
         {/* ADD PRODUCT */}
 
         <Card title="Add Product">
-          <div style={{ display: "flex", gap: 10 }}>
-            <input
-              placeholder="Product name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={input}
-            />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              addProduct();
+            }}
+          >
+            <div style={{ display: "flex", gap: 10 }}>
+              <input
+                placeholder="Product name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={input}
+              />
 
-            <input
-              placeholder="Price"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              style={input}
-            />
+              <input
+                type="number"
+                placeholder="Price"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                style={input}
+              />
 
-            <button onClick={addProduct} style={primaryBtn}>
-              Add
-            </button>
-          </div>
+              <button type="submit" style={primaryBtn}>
+                Add
+              </button>
+            </div>
+          </form>
         </Card>
-
         {/* PRODUCTS */}
 
         <Card title="Products">
@@ -244,21 +302,32 @@ export default function Dashboard() {
                 <th style={th}>Product</th>
                 <th style={th}>Price</th>
                 <th style={th}>Stock</th>
+                <th style={th}>Status</th>
                 <th style={th}>QR</th>
-                <th style={th}>Import</th>
-                <th style={th}>Delete</th>
+                <th style={th}>Actions</th>
               </tr>
             </thead>
 
             <tbody>
               {products.map((p) => {
                 const stock = p.inventory?.stock || 0;
+                const min = p.min_stock || 5;
+
+                let status = "OK";
+                let color = "#16a34a";
+
+                if (stock === 0) {
+                  status = "Out";
+                  color = "#dc2626";
+                } else if (stock <= min) {
+                  status = "Low";
+                  color = "#f59e0b";
+                }
 
                 return (
                   <tr key={p.id} style={row}>
                     <td style={td}>{p.name}</td>
-
-                    <td style={td}>${p.price}</td>
+                    <td style={td}>{p.price} VNĐ</td>
 
                     <td style={td}>
                       <span
@@ -272,40 +341,54 @@ export default function Dashboard() {
                       </span>
                     </td>
 
-                    {/* QR BUTTON */}
+                    <td style={td}>
+                      <span
+                        style={{
+                          padding: "4px 10px",
+                          borderRadius: 20,
+                          background: color,
+                          color: "white",
+                        }}
+                      >
+                        {status}
+                      </span>
+                    </td>
+
                     <td style={td}>
                       <button onClick={() => showQR(p.barcode)} style={qrBtn}>
                         QR
                       </button>
                     </td>
 
-                    {/* IMPORT */}
                     <td style={td}>
-                      <button
-                        onClick={() => importStock(p.id)}
-                        disabled={role !== "seller" && role !== "admin"}
-                        style={{
-                          ...greenBtn,
-                          opacity:
-                            role === "seller" || role === "admin" ? 1 : 0.4,
-                        }}
-                      >
-                        Import
-                      </button>
-                    </td>
+                      <div style={actionGroup}>
+                        <button
+                          onClick={() => importStock(p)}
+                          disabled={role !== "seller" && role !== "admin"}
+                          style={{
+                            ...greenBtn,
+                            opacity:
+                              role === "seller" || role === "admin" ? 1 : 0.4,
+                          }}
+                        >
+                          Import
+                        </button>
 
-                    {/* DELETE */}
-                    <td style={td}>
-                      <button
-                        onClick={() => deleteProduct(p.id)}
-                        disabled={role !== "admin"}
-                        style={{
-                          ...deleteBtn,
-                          opacity: role === "admin" ? 1 : 0.4,
-                        }}
-                      >
-                        Delete
-                      </button>
+                        <button onClick={() => editProduct(p)} style={editBtn}>
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => deleteProduct(p.id)}
+                          disabled={role !== "admin"}
+                          style={{
+                            ...deleteBtn,
+                            opacity: role === "admin" ? 1 : 0.4,
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -365,6 +448,54 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {modal && (
+        <InputModal
+          type={modal.type}
+          product={modal.product}
+          onClose={() => setModal(null)}
+          onSubmit={async (data) => {
+            if (modal.type === "edit") {
+              await fetch("/api/products", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  id: modal.product.id,
+                  name: data.name,
+                  price: Number(data.price),
+                  min_stock: Number(data.min_stock),
+                }),
+              });
+
+              toast.success("Product updated");
+            }
+
+            if (modal.type === "import") {
+              await fetch("/api/import", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  product_id: modal.product.id,
+                  quantity: Number(data.qty),
+                  user: "admin",
+                }),
+              });
+
+              toast.success("Stock imported");
+            }
+
+            setModal(null);
+            loadProducts();
+          }}
+        />
+      )}
+      {confirmModal && (
+        <ConfirmModal
+          text="Delete this product?"
+          onCancel={() => setConfirmModal(null)}
+          onConfirm={confirmDelete}
+        />
+      )}
+
       <AIBot />
     </>
   );
@@ -392,25 +523,12 @@ function StatCard({ title, value }) {
 
 /* STYLES */
 
-const page = {
-  padding: 40,
-  background: "#f8fafc",
-  minHeight: "100vh",
-};
-
+const page = { padding: 40, background: "#f8fafc", minHeight: "100vh" };
 const title = { marginBottom: 30 };
 
-const statsRow = {
-  display: "flex",
-  gap: 20,
-  marginBottom: 30,
-};
+const statsRow = { display: "flex", gap: 20, marginBottom: 30 };
 
-const statCard = {
-  background: "white",
-  padding: 20,
-  borderRadius: 10,
-};
+const statCard = { background: "white", padding: 20, borderRadius: 10 };
 
 const card = {
   background: "white",
@@ -428,15 +546,8 @@ const table = {
   textAlign: "center",
 };
 
-const th = {
-  padding: 12,
-  borderBottom: "2px solid #eee",
-};
-
-const td = {
-  padding: 12,
-  borderBottom: "1px solid #eee",
-};
+const th = { padding: 12, borderBottom: "2px solid #eee" };
+const td = { padding: 12, borderBottom: "1px solid #eee" };
 
 const input = {
   padding: 8,
@@ -468,6 +579,14 @@ const deleteBtn = {
   borderRadius: 6,
 };
 
+const editBtn = {
+  background: "#f59e0b",
+  color: "white",
+  padding: "6px 12px",
+  border: "none",
+  borderRadius: 6,
+};
+
 const row = { transition: "0.2s" };
 
 const stockBadge = {
@@ -484,4 +603,10 @@ const qrBtn = {
   padding: "6px 10px",
   borderRadius: 6,
   cursor: "pointer",
+};
+
+const actionGroup = {
+  display: "flex",
+  gap: 8,
+  justifyContent: "center",
 };

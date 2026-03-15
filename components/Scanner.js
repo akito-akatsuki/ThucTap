@@ -8,7 +8,7 @@ export default function Scanner({ onScan }) {
   const lastScanRef = useRef(0);
 
   useEffect(() => {
-    if (startedRef.current) return; // 🔥 chặn start 2 lần
+    if (startedRef.current) return;
     startedRef.current = true;
 
     let scanner;
@@ -32,7 +32,9 @@ export default function Scanner({ onScan }) {
             if (now - lastScanRef.current < 1500) return;
             lastScanRef.current = now;
 
-            if (onScan) onScan(decodedText);
+            if (onScan) {
+              setTimeout(() => onScan(decodedText), 0); // 🔥 fix React render error
+            }
           },
         );
       } catch (err) {
