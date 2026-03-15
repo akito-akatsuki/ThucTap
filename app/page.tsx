@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   LineChart,
   Line,
@@ -13,6 +14,8 @@ import {
 } from "recharts";
 
 export default function Home() {
+  const router = useRouter();
+
   const [chartData, setChartData] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
@@ -136,7 +139,16 @@ export default function Home() {
         {/* STOCK LOG */}
 
         <div className="bg-white shadow rounded-xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Stock Movement Logs</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Stock Movement Logs</h2>
+
+            <button
+              onClick={() => router.push("/logs")}
+              className="text-sm px-4 py-2 bg-black text-white rounded"
+            >
+              View All →
+            </button>
+          </div>
 
           <table className="w-full text-sm">
             <thead>
@@ -150,7 +162,7 @@ export default function Home() {
             </thead>
 
             <tbody>
-              {logs.map((log) => (
+              {logs.slice(0, 10).map((log) => (
                 <tr key={log.id} className="border-b">
                   <td className="py-2">{log.products?.name}</td>
 

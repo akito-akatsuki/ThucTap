@@ -6,7 +6,7 @@ export default function LogsPage() {
   const [logs, setLogs] = useState([]);
 
   const loadLogs = async () => {
-    const res = await fetch("/api/import-log");
+    const res = await fetch("/api/log");
     const json = await res.json();
     setLogs(json.data || []);
   };
