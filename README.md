@@ -96,8 +96,8 @@ Khi thêm sản phẩm mới:
 Clone repository
 
 ```bash
-git clone https://github.com/your-repo/inventory-system.git
-cd inventory-system
+git clone https://github.com/akito-akatsuki/ThucTap
+cd  folder name
 ```
 
 Cài đặt thư viện
@@ -113,11 +113,19 @@ npm install
 Tạo file `.env.local`
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+NEXT_PUBLIC_SUPABASE_URL=xxxxxxxxxx
+NEXT_PUBLIC_SUPABASE_ANON_KEY=xxxxxxxxxx
 
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
+ZALO_ACCESS_TOKEN=xxxxx
+ZALO_USER_ID=xxxxx
+
+GROQ_API_KEY=xxxxxxxxx
+
+EMAIL_USER=xxxxxxxxxx
+EMAIL_PASS=xxxxxxxxxx
+
+GOOGLE_CLIENT_ID=xxxxxxxxxx
+GOOGLE_CLIENT_SECRET=xxxxxxxxxx
 ```
 
 ---
@@ -140,19 +148,39 @@ http://localhost:3000
 
 ```
 app/
- ├ api/
- │   ├ products/
- │   ├ import/
- │   ├ ai/
- │   └ users/
- │
- ├ dashboard/
- │   └ page.jsx
- │
-components/
- ├ InputModal.jsx
- ├ ConfirmModal.jsx
- └ AIBot.jsx
+│
+├── api/                     # API routes (Next.js server functions)
+│   ├── ai/                  # AI prediction API
+│   ├── checkout/            # Checkout / bán hàng
+│   ├── import/              # Nhập kho
+│   ├── log/                 # Ghi log hoạt động
+│   ├── low-stock/           # Kiểm tra tồn kho thấp
+│   ├── products/            # CRUD sản phẩm
+│   ├── scan/                # Quét barcode / QR
+│   └── users/               # Lấy role và thông tin user
+│
+├── checkout/                # Trang bán hàng
+├── dashboard/               # Trang dashboard quản lý kho
+├── employees/               # Trang quản lý nhân viên
+├── logs/                    # Trang xem lịch sử hoạt động
+├── scan/                    # Trang quét QR / barcode
+│
+├── favicon.ico
+├── globals.css
+├── layout.tsx               # Layout toàn app
+└── page.tsx                 # Trang Home
+│
+components/                  # React components
+│
+├── AIBot.js                 # Chatbot AI hỗ trợ
+├── ConfirmModal.jsx         # Modal xác nhận (delete)
+├── InputModal.jsx           # Modal nhập dữ liệu (edit / import)
+├── Navbar.js                # Thanh điều hướng
+├── SaleChart.js             # Biểu đồ doanh số
+└── Scanner.js               # Component quét QR / barcode
+│
+lib/
+└── supabase.js              # Cấu hình Supabase client
 ```
 
 ---
@@ -187,7 +215,7 @@ Project hoạt động tốt với:
 
 - Vercel
 - Supabase
-- Node.js 18+
+- Node.js version 18+
 
 ---
 
