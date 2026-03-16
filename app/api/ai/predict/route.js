@@ -1,5 +1,13 @@
 import OpenAI from "openai";
 
+/* ========================
+AI RATE LIMIT + CACHE
+======================== */
+
+let lastRun = 0;
+let cachedResult = null;
+const COOLDOWN = 60000; // 60 seconds
+
 const client = new OpenAI({
   baseURL: "https://api.groq.com/openai/v1",
   apiKey: process.env.GROQ_API_KEY,
@@ -22,6 +30,19 @@ export async function POST(req) {
     }
 
     const products = body.products || [];
+
+    /* ========================
+    RATE LIMIT CHECK
+    ======================== */
+
+    const now = Date.now();
+
+    if (now - lastRun < COOLDOWN && cachedResult) {
+      return Response.json({
+        data: cachedResult,
+        cached: true,
+      });
+    }
 
     if (!products.length) {
       return Response.json({ data: [] });
@@ -62,6 +83,13 @@ ${JSON.stringify(products)}
       .trim();
 
     const data = JSON.parse(text);
+
+    /* ========================
+    SAVE CACHE
+    ======================== */
+
+    lastRun = Date.now();
+    cachedResult = data;
 
     return Response.json({ data });
   } catch (err) {

@@ -1,12 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function InputModal({ type, product, onClose, onSubmit }) {
   const [name, setName] = useState(product?.name || "");
   const [price, setPrice] = useState(product?.price || "");
   const [minStock, setMinStock] = useState(product?.min_stock || 5);
   const [qty, setQty] = useState("");
+
+  const [category, setCategory] = useState(product?.category_id || "");
+  const [categories, setCategories] = useState([]);
+
+  /* LOAD CATEGORIES */
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch("/api/categories");
+      const json = await res.json();
+      setCategories(json.data || []);
+    };
+
+    load();
+  }, []);
 
   const submit = () => {
     if (type === "edit") {
@@ -24,6 +40,7 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
         name,
         price: Number(price),
         min_stock: Number(minStock),
+        category_id: category,
       });
     }
 
@@ -56,44 +73,56 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
         <h3>{type === "edit" ? "Edit Product" : "Import Stock"}</h3>
 
         {type === "edit" && (
-          <>
-            {" "}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "100px 1fr",
-                gap: "12px 10px",
-                alignItems: "center",
-              }}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "100px 1fr",
+              gap: "12px 10px",
+              alignItems: "center",
+            }}
+          >
+            <span>Name:</span>
+            <input
+              placeholder="Product name"
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={input}
+            />
+
+            <span>Price:</span>
+            <input
+              type="number"
+              placeholder="Price"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              style={input}
+            />
+
+            <span>Min stock:</span>
+            <input
+              type="number"
+              placeholder="Minimum stock"
+              value={minStock}
+              onChange={(e) => setMinStock(e.target.value)}
+              style={input}
+            />
+
+            <span>Category:</span>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              style={input}
             >
-              <span>Name:</span>
-              <input
-                placeholder="Product name"
-                autoFocus
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                style={input}
-              />
+              <option value="">Select category</option>
 
-              <span>Price:</span>
-              <input
-                type="number"
-                placeholder="Price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                style={input}
-              />
-
-              <span>Min stock:</span>
-              <input
-                type="number"
-                placeholder="Minimum stock"
-                value={minStock}
-                onChange={(e) => setMinStock(e.target.value)}
-                style={input}
-              />
-            </div>
-          </>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
 
         {type === "import" && (

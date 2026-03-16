@@ -24,6 +24,9 @@ export default function Dashboard() {
   const [chart, setChart] = useState([]);
   const [modal, setModal] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [category, setCategory] = useState("");
+  const [newCategory, setNewCategory] = useState("");
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -43,6 +46,13 @@ export default function Dashboard() {
     setProducts(list);
 
     loadAI(list);
+  };
+  /* LOAD CATEGORIES */
+
+  const loadCategories = async () => {
+    const res = await fetch("/api/categories");
+    const json = await res.json();
+    setCategories(json.data || []);
   };
 
   /* SHOW QR */
@@ -101,6 +111,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadProducts();
+    loadCategories();
   }, []);
 
   /* REALTIME */
@@ -182,6 +193,7 @@ export default function Dashboard() {
         body: JSON.stringify({
           name,
           price: Number(price),
+          category_id: category || null,
         }),
       });
 
@@ -208,6 +220,35 @@ export default function Dashboard() {
     }
   };
 
+  /*ADD CATEGORY */
+  const addCategory = async () => {
+    if (!newCategory.trim()) {
+      toast.error("Enter category name");
+      return;
+    }
+
+    const res = await fetch("/api/categories", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: newCategory,
+      }),
+    });
+
+    const json = await res.json();
+
+    if (json.error) {
+      toast.error(json.error);
+      return;
+    }
+
+    toast.success("Category added");
+
+    setNewCategory("");
+    loadCategories();
+  };
   /* DELETE */
 
   const deleteProduct = (id) => {
@@ -263,36 +304,61 @@ export default function Dashboard() {
         </div>
 
         {/* ADD PRODUCT */}
+        {role === "admin" && (
+          <Card title="Add Product">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                addProduct();
+              }}
+            >
+              <div style={{ display: "flex", gap: 10 }}>
+                <input
+                  placeholder="Product name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  style={input}
+                />
 
-        <Card title="Add Product">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              addProduct();
-            }}
-          >
-            <div style={{ display: "flex", gap: 10 }}>
-              <input
-                placeholder="Product name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                style={input}
-              />
+                <input
+                  type="number"
+                  placeholder="Price"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  style={input}
+                />
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  style={input}
+                >
+                  <option value="">Category</option>
 
-              <input
-                type="number"
-                placeholder="Price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                style={input}
-              />
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <button type="submit" style={primaryBtn}>
+                  Add
+                </button>
+              </div>
+              <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
+                <input
+                  placeholder="New category"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  style={input}
+                />
 
-              <button type="submit" style={primaryBtn}>
-                Add
-              </button>
-            </div>
-          </form>
-        </Card>
+                <button onClick={addCategory} style={primaryBtn}>
+                  Add Category
+                </button>
+              </div>
+            </form>
+          </Card>
+        )}
         {/* PRODUCTS */}
 
         <Card title="Products">
@@ -300,6 +366,7 @@ export default function Dashboard() {
             <thead>
               <tr>
                 <th style={th}>Product</th>
+                <th style={th}>Category</th>
                 <th style={th}>Price</th>
                 <th style={th}>Stock</th>
                 <th style={th}>Status</th>
@@ -327,6 +394,7 @@ export default function Dashboard() {
                 return (
                   <tr key={p.id} style={row}>
                     <td style={td}>{p.name}</td>
+                    <td style={td}>{p.categories?.name || "-"}</td>
                     <td style={td}>{p.price} VNĐ</td>
 
                     <td style={td}>
@@ -364,17 +432,26 @@ export default function Dashboard() {
                       <div style={actionGroup}>
                         <button
                           onClick={() => importStock(p)}
-                          disabled={role !== "seller" && role !== "admin"}
+                          disabled={!(role === "admin")}
                           style={{
                             ...greenBtn,
                             opacity:
-                              role === "seller" || role === "admin" ? 1 : 0.4,
+                              role === "admin" || role === "seller" ? 1 : 0.4,
                           }}
                         >
                           Import
                         </button>
 
-                        <button onClick={() => editProduct(p)} style={editBtn}>
+                        <button
+                          onClick={() => editProduct(p)}
+                          disabled={role !== "admin"}
+                          style={{
+                            ...editBtn,
+                            opacity: role === "admin" ? 1 : 0.4,
+                            cursor:
+                              role === "admin" ? "pointer" : "not-allowed",
+                          }}
+                        >
                           Edit
                         </button>
 
@@ -463,6 +540,7 @@ export default function Dashboard() {
                   name: data.name,
                   price: Number(data.price),
                   min_stock: Number(data.min_stock),
+                  category_id: data.category_id,
                 }),
               });
 
@@ -476,7 +554,6 @@ export default function Dashboard() {
                 body: JSON.stringify({
                   product_id: modal.product.id,
                   quantity: Number(data.qty),
-                  user: "admin",
                 }),
               });
 

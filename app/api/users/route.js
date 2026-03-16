@@ -1,13 +1,12 @@
 import { supabase } from "@/lib/supabase";
 
-/* GET ROLE BY EMAIL (giữ nguyên của bạn) */
+/* GET ROLE BY EMAIL */
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email");
 
   if (!email) {
-    /* nếu không có email -> trả toàn bộ users */
     const { data, error } = await supabase
       .from("users")
       .select("*")
@@ -37,13 +36,27 @@ export async function GET(req) {
   });
 }
 
-/* UPDATE ROLE */
+/* UPDATE ROLE (ADMIN ONLY) */
 
 export async function PATCH(req) {
-  const { id, role } = await req.json();
+  const { id, role, adminEmail } = await req.json();
 
-  if (!id || !role) {
+  if (!id || !role || !adminEmail) {
     return Response.json({ error: "Missing fields" });
+  }
+
+  /* CHECK ADMIN */
+
+  const { data: admin } = await supabase
+    .from("users")
+    .select("role")
+    .eq("email", adminEmail)
+    .single();
+
+  if (!admin || admin.role !== "admin") {
+    return Response.json({
+      error: "Permission denied",
+    });
   }
 
   const { error } = await supabase.from("users").update({ role }).eq("id", id);
@@ -57,13 +70,27 @@ export async function PATCH(req) {
   });
 }
 
-/* DELETE USER */
+/* DELETE USER (ADMIN ONLY) */
 
 export async function DELETE(req) {
-  const { id } = await req.json();
+  const { id, adminEmail } = await req.json();
 
-  if (!id) {
-    return Response.json({ error: "User id required" });
+  if (!id || !adminEmail) {
+    return Response.json({ error: "Missing fields" });
+  }
+
+  /* CHECK ADMIN */
+
+  const { data: admin } = await supabase
+    .from("users")
+    .select("role")
+    .eq("email", adminEmail)
+    .single();
+
+  if (!admin || admin.role !== "admin") {
+    return Response.json({
+      error: "Permission denied",
+    });
   }
 
   const { error } = await supabase.from("users").delete().eq("id", id);

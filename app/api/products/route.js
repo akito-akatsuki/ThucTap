@@ -5,6 +5,7 @@ import nodemailer from "nodemailer";
 /* =========================
 GET PRODUCTS / GET BY BARCODE
 ========================= */
+
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const barcode = searchParams.get("barcode")?.trim();
@@ -22,6 +23,10 @@ export async function GET(req) {
         name,
         barcode,
         price,
+        category_id,
+        categories (
+          name
+        ),
         inventory (
           stock
         )
@@ -53,6 +58,7 @@ export async function GET(req) {
         name: data.name,
         price: data.price,
         barcode: data.barcode,
+        category: data.categories?.name || null,
         stock,
       },
     });
@@ -68,6 +74,10 @@ export async function GET(req) {
       barcode,
       price,
       min_stock,
+      category_id,
+      categories (
+        name
+      ),
       inventory (
         stock
       )
@@ -105,7 +115,7 @@ ADD PRODUCT
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { name, price } = body;
+    const { name, price, category_id } = body;
 
     if (!name) {
       return Response.json({
@@ -123,6 +133,7 @@ export async function POST(req) {
         name,
         price,
         barcode,
+        category_id,
       })
       .select()
       .single();
@@ -240,7 +251,7 @@ UPDATE PRODUCT
 export async function PUT(req) {
   try {
     const body = await req.json();
-    const { id, name, price, min_stock } = body;
+    const { id, name, price, min_stock, category_id } = body;
 
     if (!id) {
       return Response.json({
@@ -255,6 +266,7 @@ export async function PUT(req) {
         name,
         price,
         min_stock,
+        category_id,
       })
       .eq("id", id)
       .select()

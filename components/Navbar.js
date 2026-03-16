@@ -68,7 +68,7 @@ export default function Navbar() {
   return (
     <div style={nav}>
       <Link href="/" style={logo}>
-        Inventory AI
+        🤖 Inventory AI
       </Link>
 
       <div style={menu}>
