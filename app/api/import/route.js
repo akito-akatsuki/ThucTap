@@ -10,18 +10,26 @@ export async function POST(req) {
     }
 
     /* =========================
-       GET EMAIL
+       GET USER EMAIL
     ========================= */
 
-    const email = user || "admin";
+    let email = user;
+
+    if (!email) {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
+      email = authUser?.email;
+    }
 
     /* =========================
-       GET USERNAME FROM DB
+       GET USERNAME
     ========================= */
 
-    let username = email;
+    let username = "POS";
 
-    if (email && email !== "admin") {
+    if (email) {
       const { data } = await supabase
         .from("users")
         .select("username")
@@ -34,7 +42,7 @@ export async function POST(req) {
     }
 
     /* =========================
-       INSERT LOG
+       INSERT MOVEMENT
     ========================= */
 
     const { error } = await supabase.from("stock_movements").insert({
@@ -45,9 +53,7 @@ export async function POST(req) {
     });
 
     if (error) {
-      return Response.json({
-        error: error.message,
-      });
+      return Response.json({ error: error.message });
     }
 
     return Response.json({
