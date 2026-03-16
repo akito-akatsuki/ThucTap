@@ -221,6 +221,6 @@ Project hoạt động tốt với:
 
 # 👨‍💻 Tác Giả
 
-Developed by **Pham Hoan** **DangHieu** **QuangThien**
+Developed by **Pham Hoan** **QuangThien**
 
 Internship Project – Smart Inventory System
