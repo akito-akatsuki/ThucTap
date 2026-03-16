@@ -5,8 +5,13 @@ export async function POST(req) {
     const body = await req.json();
     const { product_id, quantity, user } = body;
 
+    console.log("BODY:", body);
+
     if (!product_id || !quantity) {
-      return Response.json({ error: "Missing fields" }, { status: 400 });
+      return Response.json(
+        { error: "Missing product_id or quantity" },
+        { status: 400 },
+      );
     }
 
     /* =========================
@@ -16,15 +21,19 @@ export async function POST(req) {
     let email = user;
 
     if (!email) {
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
+      const { data, error } = await supabase.auth.getUser();
 
-      email = authUser?.email;
+      if (error) {
+        console.log("AUTH ERROR:", error);
+      }
+
+      email = data?.user?.email;
     }
 
+    console.log("EMAIL:", email);
+
     /* =========================
-       GET USERNAME FROM users
+       GET USERNAME
     ========================= */
 
     let username = "POS";
@@ -32,14 +41,23 @@ export async function POST(req) {
     if (email) {
       const { data, error } = await supabase
         .from("users")
-        .select("username")
-        .ilike("email", email) // 👈 tránh lỗi chữ hoa chữ thường
-        .single();
+        .select("name")
+        .ilike("email", email)
+        .limit(1)
+        .maybeSingle();
 
-      if (!error && data?.username) {
-        username = data.username;
+      if (error) {
+        console.log("USER QUERY ERROR:", error);
+      }
+
+      if (data?.name) {
+        username = data.name;
+      } else {
+        username = email;
       }
     }
+
+    console.log("USERNAME:", username);
 
     /* =========================
        INSERT STOCK MOVEMENT
@@ -48,22 +66,23 @@ export async function POST(req) {
     const { error } = await supabase.from("stock_movements").insert({
       product_id,
       type: "import",
-      quantity,
+      quantity: Number(quantity),
       created_by: username,
     });
 
     if (error) {
-      return Response.json({ error: error.message });
+      console.log("INSERT ERROR:", error);
+
+      return Response.json({ error: error.message }, { status: 500 });
     }
 
     return Response.json({
       success: true,
+      created_by: username,
     });
   } catch (err) {
-    console.log(err);
+    console.log("SERVER ERROR:", err);
 
-    return Response.json({
-      error: "Server error",
-    });
+    return Response.json({ error: "Server error" }, { status: 500 });
   }
 }
