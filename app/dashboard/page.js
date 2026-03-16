@@ -550,13 +550,19 @@ export default function Dashboard() {
             }
 
             if (modal.type === "import") {
+              const {
+                data: { session },
+              } = await supabase.auth.getSession();
+
+              const email = session?.user?.email;
+
               await fetch("/api/import", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   product_id: modal.product.id,
                   quantity: Number(data.qty),
-                  user: email,
+                  user: email, // giờ email đã tồn tại
                 }),
               });
 
