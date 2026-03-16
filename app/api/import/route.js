@@ -10,7 +10,7 @@ export async function POST(req) {
     }
 
     /* =========================
-       GET USER EMAIL
+       GET EMAIL
     ========================= */
 
     let email = user;
@@ -24,25 +24,25 @@ export async function POST(req) {
     }
 
     /* =========================
-       GET USERNAME
+       GET USERNAME FROM users
     ========================= */
 
     let username = "POS";
 
     if (email) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("users")
         .select("username")
-        .eq("email", email)
+        .ilike("email", email) // 👈 tránh lỗi chữ hoa chữ thường
         .single();
 
-      if (data?.username) {
+      if (!error && data?.username) {
         username = data.username;
       }
     }
 
     /* =========================
-       INSERT MOVEMENT
+       INSERT STOCK MOVEMENT
     ========================= */
 
     const { error } = await supabase.from("stock_movements").insert({
