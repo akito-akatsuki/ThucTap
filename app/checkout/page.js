@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+
 export default function CheckoutPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [paymentMethod, setPaymentMethod] = useState(null);
 
   /* =========================
      LOAD CART
@@ -61,6 +63,43 @@ export default function CheckoutPage() {
     }
 
     setLoading(false);
+  };
+
+  /* =========================
+     STYLES (ADDED)
+  ========================= */
+
+  const btn = {
+    flex: 1,
+    padding: "14px",
+    border: "none",
+    borderRadius: 8,
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "white",
+    background: "#16a34a",
+    cursor: "pointer",
+  };
+
+  const qrModal = {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.45)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 100,
+  };
+
+  const qrBox = {
+    background: "white",
+    padding: 30,
+    borderRadius: 12,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 15,
+    boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
   };
 
   /* =========================
@@ -133,7 +172,7 @@ export default function CheckoutPage() {
                 <td style={{ textAlign: "center" }}>{item.qty}</td>
 
                 <td style={{ textAlign: "center", fontWeight: "bold" }}>
-                  ${item.price * item.qty}
+                  {item.price * item.qty}VNĐ
                 </td>
               </tr>
             ))}
@@ -153,38 +192,67 @@ export default function CheckoutPage() {
           }}
         >
           <span>Total</span>
-          <span>${total}</span>
+          <span>{total}VNĐ</span>
         </div>
 
-        <button
-          onClick={checkout}
-          disabled={loading}
-          style={{
-            width: "100%",
-            marginTop: 20,
-            padding: "14px",
-            background: loading ? "#94a3b8" : "#16a34a",
-            color: "white",
-            border: "none",
-            borderRadius: 8,
-            fontSize: 16,
-            fontWeight: "bold",
-            cursor: loading ? "not-allowed" : "pointer",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          {loading ? (
-            <>
-              <div className="loader"></div>
-              Processing...
-            </>
-          ) : (
-            "💳 Pay Now"
-          )}
-        </button>
+        {/* PAYMENT BUTTONS */}
+
+        <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+          <button
+            onClick={() => {
+              setPaymentMethod("cash");
+              checkout();
+            }}
+            style={btn}
+          >
+            💵 Cash
+          </button>
+
+          <button
+            onClick={() => setPaymentMethod("qr")}
+            style={{ ...btn, background: "#2563eb" }}
+          >
+            📱 QR Pay
+          </button>
+
+          <button
+            onClick={() => {
+              setPaymentMethod("card");
+              checkout();
+            }}
+            style={{ ...btn, background: "#7c3aed" }}
+          >
+            💳 Card
+          </button>
+        </div>
+
+        {/* QR PAYMENT MODAL */}
+
+        {paymentMethod === "qr" && (
+          <div style={qrModal}>
+            <div style={qrBox}>
+              <h2>Scan to Pay</h2>
+
+              <img
+                src={`https://img.vietqr.io/image/VCB-1018309045-compact.png?amount=${total}&addInfo=POS`}
+                width="220"
+              />
+
+              <p style={{ fontWeight: "bold" }}>Total: {total}VNĐ</p>
+
+              <button onClick={checkout} style={btn}>
+                ✓ Confirm Payment
+              </button>
+
+              <button
+                onClick={() => setPaymentMethod(null)}
+                style={{ ...btn, background: "#94a3b8" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Loader CSS */}

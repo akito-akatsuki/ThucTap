@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-export async function POST(req) {
+export async function GET(req) {
   try {
     const { barcode } = await req.json();
 

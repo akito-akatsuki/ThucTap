@@ -94,27 +94,22 @@ export default function ScanPage() {
   ========================= */
 
   const increaseQty = (id) => {
+    const item = cart.find((p) => p.id === id);
+
+    if (item && item.qty + 1 > item.stock) {
+      if (!alertRef.current) {
+        toast.error("Out of stock");
+        alertRef.current = true;
+
+        setTimeout(() => {
+          alertRef.current = false;
+        }, 1200);
+      }
+      return;
+    }
+
     setCart((prev) =>
-      prev.map((p) => {
-        if (p.id === id) {
-          if (p.qty + 1 > p.stock) {
-            if (!alertRef.current) {
-              toast.error("Out of stock");
-              alertRef.current = true;
-
-              setTimeout(() => {
-                alertRef.current = false;
-              }, 1200);
-            }
-
-            return p;
-          }
-
-          return { ...p, qty: p.qty + 1 };
-        }
-
-        return p;
-      }),
+      prev.map((p) => (p.id === id ? { ...p, qty: p.qty + 1 } : p)),
     );
   };
 
@@ -300,7 +295,7 @@ export default function ScanPage() {
                     </td>
 
                     <td style={{ textAlign: "center" }}>
-                      ${item.price * item.qty}
+                      {item.price * item.qty}VNĐ
                     </td>
 
                     <td style={{ textAlign: "center" }}>
@@ -339,7 +334,7 @@ export default function ScanPage() {
             }}
           >
             <span>Total</span>
-            <span>${total}</span>
+            <span>{total}VNĐ</span>
           </div>
 
           <button

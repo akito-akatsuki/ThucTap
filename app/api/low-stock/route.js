@@ -42,7 +42,60 @@ export async function POST(req) {
       from: process.env.EMAIL_USER,
       to: adminEmails.join(","), // gửi cho tất cả admin
       subject: "⚠ Low Stock Alert",
-      text: `Product ${name} is low stock. Only ${stock} items left.`,
+      html: `
+<div style="font-family:Arial, sans-serif; background:#f8fafc; padding:30px">
+  <div style="
+      max-width:520px;
+      margin:auto;
+      background:white;
+      border-radius:10px;
+      padding:24px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.08)
+  ">
+    <h2 style="color:#dc2626;margin-top:0">
+      ⚠ Low Stock Alert
+    </h2>
+
+    <p style="font-size:15px;color:#333">
+      The following product is running out of stock:
+    </p>
+
+    <div style="
+        background:#f1f5f9;
+        padding:16px;
+        border-radius:8px;
+        margin:16px 0
+    ">
+      <b>Product:</b> ${name} <br/>
+      <b>Remaining stock:</b> ${stock}
+    </div>
+
+    <p style="font-size:14px;color:#555">
+      Please restock this item soon to avoid inventory issues.
+    </p>
+
+    <a href="https://thuc-tap-cn.vercel.app/dashboard"
+       style="
+        display:inline-block;
+        margin-top:15px;
+        padding:10px 16px;
+        background:#2563eb;
+        color:white;
+        text-decoration:none;
+        border-radius:6px;
+        font-weight:bold
+       ">
+       Open Inventory Dashboard
+    </a>
+
+    <hr style="margin:25px 0"/>
+
+    <p style="font-size:12px;color:#888">
+      Smart Inventory System • Auto Stock Monitoring
+    </p>
+  </div>
+</div>
+`,
     });
 
     console.log("EMAIL SENT SUCCESS");

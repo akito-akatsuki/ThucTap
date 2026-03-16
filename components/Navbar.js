@@ -43,11 +43,11 @@ export default function Navbar() {
     setUser(null);
   };
 
-  const avatar = user?.user_metadata?.avatar_url;
+  const avatar =
+    user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const name = user?.user_metadata?.full_name;
   const email = user?.email;
   const [role, setRole] = useState(null);
-
   useEffect(() => {
     const getRole = async () => {
       if (!user) return;

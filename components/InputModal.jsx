@@ -57,29 +57,42 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
 
         {type === "edit" && (
           <>
-            <input
-              placeholder="Product name"
-              value={name}
-              autoFocus
-              onChange={(e) => setName(e.target.value)}
-              style={input}
-            />
+            {" "}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "100px 1fr",
+                gap: "12px 10px",
+                alignItems: "center",
+              }}
+            >
+              <span>Name:</span>
+              <input
+                placeholder="Product name"
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={input}
+              />
 
-            <input
-              type="number"
-              placeholder="Price"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              style={input}
-            />
+              <span>Price:</span>
+              <input
+                type="number"
+                placeholder="Price"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                style={input}
+              />
 
-            <input
-              type="number"
-              placeholder="Minimum stock"
-              value={minStock}
-              onChange={(e) => setMinStock(e.target.value)}
-              style={input}
-            />
+              <span>Min stock:</span>
+              <input
+                type="number"
+                placeholder="Minimum stock"
+                value={minStock}
+                onChange={(e) => setMinStock(e.target.value)}
+                style={input}
+              />
+            </div>
           </>
         )}
 
@@ -131,9 +144,12 @@ const modal = {
 };
 
 const input = {
-  padding: 8,
-  border: "1px solid #ddd",
-  borderRadius: 6,
+  width: "100%",
+  padding: "8px 10px",
+  borderRadius: "6px",
+  border: "1px solid #ccc",
+  fontSize: "14px",
+  boxSizing: "border-box",
 };
 
 const actions = {
