@@ -29,8 +29,8 @@ export default function CheckoutPage() {
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
   /* =========================
-     CHECKOUT
-  ========================= */
+   CHECKOUT
+========================= */
 
   const checkout = async () => {
     if (loading) return;
@@ -38,12 +38,21 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const email = session?.user?.email;
+
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({
+          items,
+          user: email, // 👈 thêm dòng này
+        }),
       });
 
       const data = await res.json();
@@ -64,7 +73,6 @@ export default function CheckoutPage() {
 
     setLoading(false);
   };
-
   /* =========================
      STYLES (ADDED)
   ========================= */
