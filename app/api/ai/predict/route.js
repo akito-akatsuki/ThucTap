@@ -5,6 +5,12 @@ const client = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
 });
 
+export async function GET() {
+  return Response.json({
+    message: "AI predict API working",
+  });
+}
+
 export async function POST(req) {
   try {
     let body = {};
@@ -54,8 +60,6 @@ ${JSON.stringify(products)}
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
-
-    // console.log("AI RAW:", text);
 
     const data = JSON.parse(text);
 
