@@ -149,9 +149,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     const getRole = async () => {
-      const { data: session } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      const email = session?.session?.user?.email;
+      const email = session?.user?.email;
 
       if (!email) return;
 
