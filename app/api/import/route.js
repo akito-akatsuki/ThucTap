@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { product_id, quantity, user } = body;
+    const { product_id, quantity } = body;
 
     console.log("BODY:", body);
 
@@ -15,47 +15,26 @@ export async function POST(req) {
     }
 
     /* =========================
-       GET EMAIL
+       GET CURRENT USER
     ========================= */
 
-    let email = user;
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (!email) {
-      const { data, error } = await supabase.auth.getUser();
-
-      if (error) {
-        console.log("AUTH ERROR:", error);
-      }
-
-      email = data?.user?.email;
+    if (authError) {
+      console.log("AUTH ERROR:", authError);
     }
 
-    console.log("EMAIL:", email);
-
-    /* =========================
-       GET USERNAME
-    ========================= */
-
-    let username = "POS";
-
-    if (email) {
-      const { data, error } = await supabase
-        .from("users")
-        .select("name")
-        .ilike("email", email)
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.log("USER QUERY ERROR:", error);
-      }
-
-      if (data?.name) {
-        username = data.name;
-      } else {
-        username = email;
-      }
+    if (!user) {
+      return Response.json({ error: "User not logged in" }, { status: 401 });
     }
+
+    const email = user.email;
+    const name = user.user_metadata?.name || "Unknown";
+
+    const username = `${email} (${name})`;
 
     console.log("USERNAME:", username);
 
@@ -72,7 +51,6 @@ export async function POST(req) {
 
     if (error) {
       console.log("INSERT ERROR:", error);
-
       return Response.json({ error: error.message }, { status: 500 });
     }
 
