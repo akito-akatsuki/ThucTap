@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(req) {
   try {
-    const { items } = await req.json();
+    const { items, user } = await req.json();
 
     if (!items || items.length === 0) {
       return Response.json({
@@ -14,10 +14,10 @@ export async function POST(req) {
     /* GET USER */
 
     const {
-      data: { user },
+      data: { user: authUser },
     } = await supabase.auth.getUser();
 
-    const userEmail = user?.email || "POS";
+    const userEmail = authUser?.email || user || "POS";
 
     /* TOTAL */
 
