@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import AIBot from "@/components/AIBot";
 
 export default function Home() {
   const router = useRouter();
@@ -183,6 +184,7 @@ export default function Home() {
           </table>
         </div>
       </div>
+      <AIBot />
     </main>
   );
 }
