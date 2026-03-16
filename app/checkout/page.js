@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { supabase } from "@/lib/supabase"; // ✅ THÊM DÒNG NÀY
 
 export default function CheckoutPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState(null);
+
+  const router = useRouter();
 
   /* =========================
      LOAD CART
@@ -29,8 +31,8 @@ export default function CheckoutPage() {
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
   /* =========================
-   CHECKOUT
-========================= */
+     CHECKOUT
+  ========================= */
 
   const checkout = async () => {
     if (loading) return;
@@ -38,11 +40,15 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      /* GET USER EMAIL */
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       const email = session?.user?.email;
+
+      /* CALL API */
 
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -51,7 +57,7 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           items,
-          user: email, // 👈 thêm dòng này
+          user: email, // 👈 gửi email cho API
         }),
       });
 
@@ -73,8 +79,9 @@ export default function CheckoutPage() {
 
     setLoading(false);
   };
+
   /* =========================
-     STYLES (ADDED)
+     STYLES
   ========================= */
 
   const btn = {
@@ -175,7 +182,7 @@ export default function CheckoutPage() {
               <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
                 <td style={{ padding: 12 }}>{item.name}</td>
 
-                <td style={{ textAlign: "center" }}>${item.price}</td>
+                <td style={{ textAlign: "center" }}>{item.price}VNĐ</td>
 
                 <td style={{ textAlign: "center" }}>{item.qty}</td>
 
@@ -262,8 +269,6 @@ export default function CheckoutPage() {
           </div>
         )}
       </div>
-
-      {/* Loader CSS */}
 
       <style jsx>{`
         .loader {
