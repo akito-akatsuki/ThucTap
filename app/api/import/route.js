@@ -3,25 +3,13 @@ import { supabase } from "@/lib/supabase";
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { product_id, quantity } = body;
+    const { product_id, quantity, user } = body;
 
     if (!product_id || !quantity) {
       return Response.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    /* GET CURRENT USER */
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const email = session?.user?.email;
-
-    if (!email) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    /* SAVE STOCK MOVEMENT */
+    const email = user || "admin";
 
     const { error } = await supabase.from("stock_movements").insert({
       product_id,
