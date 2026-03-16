@@ -562,7 +562,7 @@ export default function Dashboard() {
                 body: JSON.stringify({
                   product_id: modal.product.id,
                   quantity: Number(data.qty),
-                  user: user,
+                  user: session?.user,
                 }),
               });
 
