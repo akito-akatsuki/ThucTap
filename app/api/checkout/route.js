@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(req) {
   try {
@@ -13,46 +12,33 @@ export async function POST(req) {
     }
 
     /* =========================
-       INIT SUPABASE SERVER
+       GET USER (OPTIONAL)
     ========================= */
-    const cookieStore = cookies();
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          get: (name) => cookieStore.get(name)?.value,
-        },
-      },
-    );
-
-    /* =========================
-       GET USER
-    ========================= */
-    /* =========================
-   GET USER (SAFE VERSION)
-========================= */
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    // fallback để không crash checkout
     let userId = "system";
     let name = "POS";
     let username = "POS";
 
-    if (user && !userError) {
-      userId = user.id;
+    // ⚠️ client supabase ở server thường KHÔNG có session
+    // nên đoạn này có thể fail → fallback vẫn chạy
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      const email = user.email || "POS";
-      name = user.user_metadata?.name || "Unknown";
+      if (user) {
+        userId = user.id;
 
-      username = `${email} (${name})`;
+        const email = user.email || "POS";
+        name = user.user_metadata?.name || "Unknown";
+
+        username = `${email} (${name})`;
+      }
+    } catch (e) {
+      console.log("Auth fallback:", e.message);
     }
 
-    console.log("USER:", user);
+    console.log("USER:", username);
+
     /* =========================
        TOTAL
     ========================= */
@@ -71,10 +57,7 @@ export async function POST(req) {
       .select()
       .single();
 
-    if (invoiceError) {
-      console.log("Invoice error:", invoiceError);
-      throw invoiceError;
-    }
+    if (invoiceError) throw invoiceError;
 
     /* =========================
        PROCESS ITEMS
@@ -104,7 +87,6 @@ export async function POST(req) {
         note: "sale",
       });
 
-      // không cần await
       fetch(`${req.nextUrl.origin}/api/low-stock`, {
         method: "POST",
         headers: {
