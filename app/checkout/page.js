@@ -33,7 +33,6 @@ export default function CheckoutPage() {
   /* =========================
      CHECKOUT
   ========================= */
-
   const checkout = async () => {
     if (loading) return;
 
@@ -41,14 +40,9 @@ export default function CheckoutPage() {
 
     try {
       /* GET USER EMAIL */
-
       const {
         data: { session },
       } = await supabase.auth.getSession();
-
-      const email = session?.user?.email;
-
-      /* CALL API */
 
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -57,7 +51,7 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           items,
-          user: email, // 👈 gửi email cho API
+          user: session?.user,
         }),
       });
 

@@ -13,15 +13,10 @@ export async function POST(req) {
 
     /* GET USER */
 
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-
-    const email = authUser?.email || "POS";
-    const name = authUser?.user_metadata?.name || "Unknown";
+    const email = user?.email || "POS";
+    const name = user?.user_metadata?.name || "Unknown";
 
     const username = `${email} (${name})`;
-
     /* TOTAL */
 
     const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
