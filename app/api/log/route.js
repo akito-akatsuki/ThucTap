@@ -1,42 +1,29 @@
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
-  const cookieStore = cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get: (name) => cookieStore.get(name)?.value,
-      },
-    },
-  );
-
   const { data, error } = await supabase
-    .from("invoice_items")
+    .from("stock_movements")
     .select(
       `
       id,
-      qty,
+      quantity,
       price,
+      type,
+      created_at,
+      created_by,
       invoice_id,
+      products ( name ),
       invoices (
         id,
         created_at,
-        created_by,
         created_name
-      ),
-      products (
-        name
       )
     `,
     )
-    .order("id", { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.log("API error:", error);
+    console.log("LOG API ERROR:", error);
     return Response.json({ error: error.message });
   }
 

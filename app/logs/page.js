@@ -2,17 +2,22 @@
 
 import { useEffect, useState } from "react";
 
-export default function LogsPage() {
+export default function StockLogsPage() {
   const [logs, setLogs] = useState([]);
   const [search, setSearch] = useState("");
+  const [open, setOpen] = useState({}); // 🔥 dropdown state
 
   const loadLogs = async () => {
-    const res = await fetch("/api/log");
-    const json = await res.json();
+    try {
+      const res = await fetch("/api/log");
+      const json = await res.json();
 
-    console.log("🔥 DATA:", json);
+      console.log("🔥 LOG DATA:", json);
 
-    setLogs(json.data || []);
+      setLogs(json.data || []);
+    } catch (err) {
+      console.log("Fetch error:", err);
+    }
   };
 
   useEffect(() => {
@@ -20,87 +25,123 @@ export default function LogsPage() {
   }, []);
 
   /* =========================
-     SORT THEO NGÀY
+     SORT
   ========================= */
-
-  const safeLogs = (logs || []).sort(
-    (a, b) =>
-      new Date(b.invoices?.created_at || 0) -
-      new Date(a.invoices?.created_at || 0),
+  const sortedLogs = [...logs].sort(
+    (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0),
   );
 
   /* =========================
      GROUP BY INVOICE
   ========================= */
-
-  const grouped = safeLogs.reduce((acc, item) => {
-    const key = item.invoice_id;
-    if (!key) return acc;
+  const grouped = sortedLogs.reduce((acc, log) => {
+    const key = log.invoice_id || "no-invoice";
 
     if (!acc[key]) {
       acc[key] = {
         invoice_id: key,
-        created_at: item.invoices?.created_at,
-        user_name:
-          item.invoices?.users?.name ||
-          item.invoices?.created_name ||
-          item.invoices?.users?.email ||
-          "Unknown",
+        created_at: log.created_at,
+        user: log.created_by || "POS",
         items: [],
       };
     }
 
-    acc[key].items.push(item);
+    acc[key].items.push(log);
     return acc;
   }, {});
 
   /* =========================
      FILTER
   ========================= */
+  const filtered = Object.values(grouped).filter((order) => {
+    const keyword = search.toLowerCase();
 
-  const filtered = Object.values(grouped).filter((order) =>
-    (order.invoice_id || "").toLowerCase().includes(search.toLowerCase()),
-  );
+    return (
+      (order.invoice_id || "").toLowerCase().includes(keyword) ||
+      order.items.some((i) =>
+        (i.products?.name || "").toLowerCase().includes(keyword),
+      )
+    );
+  });
 
   return (
     <div style={page}>
-      <h1 style={title}>📋 Orders</h1>
+      <h1 style={title}>📦 Stock Movement Logs</h1>
 
+      {/* SEARCH */}
       <input
         style={input}
-        placeholder="Search invoice..."
+        placeholder="Search product or invoice..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
 
+      {/* LIST */}
       {filtered.map((order) => {
-        const shortId = order.invoice_id.slice(0, 8).toUpperCase();
+        const shortId =
+          order.invoice_id !== "no-invoice"
+            ? order.invoice_id.slice(0, 8).toUpperCase()
+            : "N/A";
 
-        const total = order.items.reduce((sum, i) => sum + i.qty * i.price, 0);
+        const isOpen = open[order.invoice_id];
+
+        const total = order.items.reduce(
+          (sum, i) => sum + i.quantity * (i.price || 0),
+          0,
+        );
+
+        const date = order.created_at
+          ? new Date(order.created_at).toLocaleString()
+          : "No date";
 
         return (
           <div key={order.invoice_id} style={card}>
-            <h3 style={invoice}>🧾 INV-{shortId}</h3>
+            {/* HEADER */}
+            <div
+              style={header}
+              onClick={() =>
+                setOpen((prev) => ({
+                  ...prev,
+                  [order.invoice_id]: !prev[order.invoice_id],
+                }))
+              }
+            >
+              <div>
+                <h3 style={{ margin: 0 }}>
+                  🧾 INV-{shortId} {isOpen ? "▲" : "▼"}
+                </h3>
+                <p style={meta}>👤 {order.user}</p>
+                <p style={meta}>🕒 {date}</p>
+              </div>
 
-            {/* 👤 USER */}
-            <p style={user}>👤 {order.user_name}</p>
+              <div style={totalStyle}>💰 {total.toLocaleString()}đ</div>
+            </div>
 
-            {/* 🕒 DATE */}
-            <p style={date}>
-              {order.created_at
-                ? new Date(order.created_at).toLocaleString()
-                : "No date"}
-            </p>
-
-            <ul style={list}>
+            {/* DROPDOWN */}
+            <div style={dropdown}>
               {order.items.map((i) => (
-                <li key={i.id} style={item}>
-                  {i.products?.name} x{i.qty} — {i.price.toLocaleString()}đ
-                </li>
-              ))}
-            </ul>
+                <div
+                  key={i.id}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "2fr 1fr 1fr 1fr",
+                    gap: "10px",
+                    padding: "6px 0",
+                    alignItems: "center",
+                  }}
+                >
+                  <span>{i.products?.name || "Unknown"}</span>
 
-            <p style={totalStyle}>💰 Total: {total.toLocaleString()}đ</p>
+                  <span>{i.type === "export" ? "📦 Export" : "📥 Import"}</span>
+
+                  <span>x{i.quantity}</span>
+
+                  <span style={{ textAlign: "right" }}>
+                    {(i.price || 0).toLocaleString()}đ
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         );
       })}
@@ -139,33 +180,32 @@ const card = {
   boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
 };
 
-const invoice = {
-  marginBottom: 5,
+const header = {
+  display: "flex",
+  justifyContent: "space-between",
+  cursor: "pointer",
 };
 
-const user = {
-  fontSize: 14,
-  fontWeight: "bold",
-  color: "#2563eb",
-  marginBottom: 5,
-};
-
-const date = {
+const meta = {
   fontSize: 12,
   color: "#666",
-  marginBottom: 10,
+  margin: "2px 0",
 };
 
-const list = {
-  paddingLeft: 20,
+const dropdown = {
+  marginTop: 10,
+  borderTop: "1px solid #eee",
+  paddingTop: 10,
 };
 
 const item = {
-  marginBottom: 5,
+  display: "flex",
+  justifyContent: "space-between",
+  padding: "6px 0",
+  fontSize: 14,
 };
 
 const totalStyle = {
-  marginTop: 10,
   fontWeight: "bold",
   color: "#16a34a",
 };

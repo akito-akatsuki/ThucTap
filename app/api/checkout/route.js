@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(req) {
   try {
-    const { items } = await req.json();
+    const { items, user } = await req.json();
 
     if (!items || items.length === 0) {
       return Response.json({
@@ -12,29 +12,16 @@ export async function POST(req) {
     }
 
     /* =========================
-       GET USER (OPTIONAL)
+       USER (FROM FRONTEND)
     ========================= */
-    let userId = "system";
+    let userId = null;
     let name = "POS";
     let username = "POS";
 
-    // ⚠️ client supabase ở server thường KHÔNG có session
-    // nên đoạn này có thể fail → fallback vẫn chạy
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        userId = user.id;
-
-        const email = user.email || "POS";
-        name = user.user_metadata?.name || "Unknown";
-
-        username = `${email} (${name})`;
-      }
-    } catch (e) {
-      console.log("Auth fallback:", e.message);
+    if (user) {
+      userId = user.id || null;
+      name = user.name || "User";
+      username = `${user.email} (${name})`;
     }
 
     console.log("USER:", username);
@@ -85,6 +72,7 @@ export async function POST(req) {
         price: item.price,
         created_by: username,
         note: "sale",
+        invoice_id: invoice.id, // 🔥 quan trọng
       });
 
       fetch(`${req.nextUrl.origin}/api/low-stock`, {

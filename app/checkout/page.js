@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { supabase } from "@/lib/supabase"; // 🔥 THÊM
 
 export default function CheckoutPage() {
   const [items, setItems] = useState([]);
@@ -33,14 +34,25 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      // 🔥 LẤY USER TỪ CLIENT
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       const res = await fetch("/api/checkout", {
         method: "POST",
-        credentials: "include", // 🔥 QUAN TRỌNG NHẤT
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          items, // ❌ KHÔNG gửi user nữa
+          items,
+          user: user
+            ? {
+                id: user.id,
+                email: user.email,
+                name: user.user_metadata?.name,
+              }
+            : null,
         }),
       });
 
