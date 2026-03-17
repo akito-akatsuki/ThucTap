@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { supabase } from "@/lib/supabase"; // ✅ THÊM DÒNG NÀY
 
 export default function CheckoutPage() {
   const [items, setItems] = useState([]);
@@ -15,23 +14,18 @@ export default function CheckoutPage() {
   /* =========================
      LOAD CART
   ========================= */
-
   useEffect(() => {
     const cart = localStorage.getItem("cart");
-
-    if (cart) {
-      setItems(JSON.parse(cart));
-    }
+    if (cart) setItems(JSON.parse(cart));
   }, []);
 
   /* =========================
      TOTAL
   ========================= */
-
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
   /* =========================
-     CHECKOUT
+     CHECKOUT (FIXED)
   ========================= */
   const checkout = async () => {
     if (loading) return;
@@ -39,19 +33,14 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      /* GET USER EMAIL */
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
       const res = await fetch("/api/checkout", {
         method: "POST",
+        credentials: "include", // 🔥 QUAN TRỌNG NHẤT
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          items,
-          user: session?.user,
+          items, // ❌ KHÔNG gửi user nữa
         }),
       });
 
@@ -65,9 +54,10 @@ export default function CheckoutPage() {
 
         router.push("/scan");
       } else {
-        toast.error(data.error);
+        toast.error(data.error || "Checkout failed");
       }
     } catch (err) {
+      console.log(err);
       toast.error("Checkout failed");
     }
 
@@ -77,7 +67,6 @@ export default function CheckoutPage() {
   /* =========================
      STYLES
   ========================= */
-
   const btn = {
     flex: 1,
     padding: "14px",
@@ -114,7 +103,6 @@ export default function CheckoutPage() {
   /* =========================
      UI
   ========================= */
-
   return (
     <div
       style={{
@@ -134,6 +122,7 @@ export default function CheckoutPage() {
         }}
       >
         <h1 style={{ marginBottom: 20 }}>🧾 Checkout</h1>
+
         {loading && (
           <div
             style={{ display: "flex", justifyContent: "center", margin: 20 }}
@@ -142,38 +131,20 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
-        >
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "#f1f5f9" }}>
-              <th style={{ textAlign: "left", padding: 12, width: "40%" }}>
-                Product
-              </th>
-
-              <th style={{ textAlign: "center", width: "20%" }}>Price</th>
-
-              <th style={{ textAlign: "center", width: "20%" }}>Qty</th>
-
-              <th style={{ textAlign: "center", width: "20%" }}>Total</th>
+              <th style={{ textAlign: "left", padding: 12 }}>Product</th>
+              <th style={{ textAlign: "center" }}>Price</th>
+              <th style={{ textAlign: "center" }}>Qty</th>
+              <th style={{ textAlign: "center" }}>Total</th>
             </tr>
           </thead>
 
           <tbody>
             {items.length === 0 && (
               <tr>
-                <td
-                  colSpan="4"
-                  style={{
-                    textAlign: "center",
-                    padding: 30,
-                    color: "#888",
-                  }}
-                >
+                <td colSpan="4" style={{ textAlign: "center", padding: 30 }}>
                   Cart empty
                 </td>
               </tr>
@@ -182,11 +153,8 @@ export default function CheckoutPage() {
             {items.map((item) => (
               <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
                 <td style={{ padding: 12 }}>{item.name}</td>
-
                 <td style={{ textAlign: "center" }}>{item.price}VNĐ</td>
-
                 <td style={{ textAlign: "center" }}>{item.qty}</td>
-
                 <td style={{ textAlign: "center", fontWeight: "bold" }}>
                   {item.price * item.qty}VNĐ
                 </td>
@@ -211,8 +179,6 @@ export default function CheckoutPage() {
           <span>{total}VNĐ</span>
         </div>
 
-        {/* PAYMENT BUTTONS */}
-
         <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
           <button
             disabled={loading}
@@ -220,23 +186,12 @@ export default function CheckoutPage() {
               setPaymentMethod("cash");
               checkout();
             }}
-            style={{
-              ...btn,
-              opacity: loading ? 0.6 : 1,
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
+            style={btn}
           >
             {loading ? "Processing..." : "💵 Cash"}
           </button>
 
-          <button
-            onClick={() => setPaymentMethod("qr")}
-            style={{
-              ...btn,
-              opacity: loading ? 0.6 : 1,
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-          >
+          <button onClick={() => setPaymentMethod("qr")} style={btn}>
             📱 QR Pay
           </button>
 
@@ -252,29 +207,19 @@ export default function CheckoutPage() {
           </button>
         </div>
 
-        {/* QR PAYMENT MODAL */}
-
         {paymentMethod === "qr" && (
           <div style={qrModal}>
             <div style={qrBox}>
               <h2>Scan to Pay</h2>
 
               <img
-                src={`https://img.vietqr.io/image/VCB-1018309045-compact.png?amount=${total}&addInfo=Thanh Toán Đơn Hàng`}
+                src={`https://img.vietqr.io/image/VCB-1018309045-compact.png?amount=${total}`}
                 width="220"
               />
 
               <p style={{ fontWeight: "bold" }}>Total: {total}VNĐ</p>
 
-              <button
-                onClick={checkout}
-                style={{
-                  ...btn,
-                  opacity: loading ? 0.6 : 1,
-                  cursor: loading ? "not-allowed" : "pointer",
-                }}
-                disabled={loading}
-              >
+              <button onClick={checkout} style={btn} disabled={loading}>
                 {loading ? "Processing..." : "✓ Confirm Payment"}
               </button>
 

@@ -1,4 +1,5 @@
-import { supabase } from "@/lib/supabase";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 
 export async function POST(req) {
   try {
@@ -12,12 +13,29 @@ export async function POST(req) {
     }
 
     /* =========================
-       GET USER FROM AUTH
+       INIT SUPABASE SERVER
+    ========================= */
+    const cookieStore = cookies();
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get: (name) => cookieStore.get(name)?.value,
+        },
+      },
+    );
+
+    /* =========================
+       GET USER
     ========================= */
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
+
+    console.log("USER:", user); // 🔥 debug
 
     if (userError || !user) {
       return Response.json({
@@ -29,7 +47,6 @@ export async function POST(req) {
     const userId = user.id;
     const email = user.email || "POS";
     const name = user.user_metadata?.name || "Unknown";
-
     const username = `${email} (${name})`;
 
     /* =========================
@@ -44,8 +61,8 @@ export async function POST(req) {
       .from("invoices")
       .insert({
         total,
-        created_by: userId, // 🔥 UUID
-        created_name: name, // 🔥 fallback
+        created_by: userId,
+        created_name: name,
       })
       .select()
       .single();
@@ -83,6 +100,7 @@ export async function POST(req) {
         note: "sale",
       });
 
+      // không cần await
       fetch(`${req.nextUrl.origin}/api/low-stock`, {
         method: "POST",
         headers: {
