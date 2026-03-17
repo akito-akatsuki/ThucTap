@@ -13,6 +13,7 @@ import {
   Legend,
 } from "recharts";
 import AIBot from "@/components/AIBot";
+import { formatVND } from "./utils/currency";
 
 /* =========================
    TYPES (fix TS sạch)
@@ -173,6 +174,7 @@ export default function Home() {
                     created_at: log.created_at,
                     user: log.created_by || "POS",
                     items: [],
+                    type: log.type,
                   };
                 }
 
@@ -223,7 +225,7 @@ function DashboardLogItem({
   total: number;
 }) {
   const [open, setOpen] = useState(false);
-
+  const isExport = order.type === "export";
   return (
     <div className="border rounded-xl p-4 mb-3">
       {/* HEADER */}
@@ -232,15 +234,21 @@ function DashboardLogItem({
         className="flex justify-between cursor-pointer"
       >
         <div>
-          <h3 className="font-semibold">
-            🧾 INV-{shortId} {open ? "▲" : "▼"}
+          <h3 className="font-semibold flex items-center gap-2">
+            <span
+              className={`px-2 py-1 rounded text-white text-xs font-bold ${
+                isExport ? "bg-red-500" : "bg-green-500"
+              }`}
+            >
+              🧾 INV-{shortId}
+            </span>
+
+            <span>{open ? "▲" : "▼"}</span>
           </h3>
           <p className="text-xs text-gray-500">👤 {order.user}</p>
         </div>
 
-        <div className="font-bold text-green-600">
-          💰 {total.toLocaleString()}đ
-        </div>
+        <div className="font-bold text-green-600">💰{formatVND(total)}</div>
       </div>
 
       {/* DROPDOWN */}
@@ -254,9 +262,7 @@ function DashboardLogItem({
 
               <span>x{i.quantity}</span>
 
-              <span className="text-right">
-                {(i.price || 0).toLocaleString()}đ
-              </span>
+              <span className="text-right">{formatVND(i.price || 0)}</span>
             </div>
           ))}
         </div>

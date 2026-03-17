@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { supabase } from "@/lib/supabase"; // 🔥 THÊM
+import { supabase } from "@/lib/supabase";
+import { formatVND } from "../utils/currency";
 
 export default function CheckoutPage() {
   const [items, setItems] = useState([]);
@@ -165,10 +166,15 @@ export default function CheckoutPage() {
             {items.map((item) => (
               <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
                 <td style={{ padding: 12 }}>{item.name}</td>
-                <td style={{ textAlign: "center" }}>{item.price}VNĐ</td>
+
+                <td style={{ textAlign: "center" }}>
+                  {formatVND(item.price || 0)}
+                </td>
+
                 <td style={{ textAlign: "center" }}>{item.qty}</td>
+
                 <td style={{ textAlign: "center", fontWeight: "bold" }}>
-                  {item.price * item.qty}VNĐ
+                  {formatVND((item.price || 0) * item.qty)}
                 </td>
               </tr>
             ))}
@@ -188,7 +194,7 @@ export default function CheckoutPage() {
           }}
         >
           <span>Total</span>
-          <span>{total}VNĐ</span>
+          <span>{formatVND(total)}</span>
         </div>
 
         <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
@@ -229,7 +235,7 @@ export default function CheckoutPage() {
                 width="220"
               />
 
-              <p style={{ fontWeight: "bold" }}>Total: {total}VNĐ</p>
+              <p style={{ fontWeight: "bold" }}>Total: {formatVND(total)}</p>
 
               <button onClick={checkout} style={btn} disabled={loading}>
                 {loading ? "Processing..." : "✓ Confirm Payment"}

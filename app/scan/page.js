@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Scanner from "@/components/Scanner";
 import toast from "react-hot-toast";
+import { formatVND } from "../utils/currency";
+
 export default function ScanPage() {
   const router = useRouter();
 
@@ -295,7 +297,7 @@ export default function ScanPage() {
                     </td>
 
                     <td style={{ textAlign: "center" }}>
-                      {item.price * item.qty}VNĐ
+                      {formatVND((item.price || 0) * item.qty)}
                     </td>
 
                     <td style={{ textAlign: "center" }}>
@@ -334,7 +336,7 @@ export default function ScanPage() {
             }}
           >
             <span>Total</span>
-            <span>{total}VNĐ</span>
+            <span>{formatVND(total)}</span>
           </div>
 
           <button

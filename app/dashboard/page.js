@@ -17,6 +17,7 @@ import InputModal from "@/components/InputModal";
 import toast from "react-hot-toast";
 import ConfirmModal from "@/components/ConfirmModal";
 import { supabase } from "@/lib/supabase";
+import { formatVND } from "../utils/currency";
 
 export default function Dashboard() {
   const [products, setProducts] = useState([]);
@@ -397,7 +398,7 @@ export default function Dashboard() {
                   <tr key={p.id} style={row}>
                     <td style={td}>{p.name}</td>
                     <td style={td}>{p.categories?.name || "-"}</td>
-                    <td style={td}>{p.price} VNĐ</td>
+                    <td style={td}>{formatVND(p.price || 0)}</td>
 
                     <td style={td}>
                       <span

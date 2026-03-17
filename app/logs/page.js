@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatVND } from "../utils/currency";
 
 export default function StockLogsPage() {
   const [logs, setLogs] = useState([]);
   const [search, setSearch] = useState("");
-  const [open, setOpen] = useState({}); // dropdown state
+  const [open, setOpen] = useState({});
 
   /* =========================
      LOAD LOGS
@@ -14,7 +15,6 @@ export default function StockLogsPage() {
     try {
       const res = await fetch("/api/log");
       const json = await res.json();
-
       setLogs(json.data || []);
     } catch (err) {
       console.log("Fetch error:", err);
@@ -44,6 +44,7 @@ export default function StockLogsPage() {
         created_at: log.created_at,
         user: log.created_by || "POS",
         items: [],
+        type: log.type, // 👈 LẤY TYPE NGAY TỪ LOG ĐẦU TIÊN
       };
     }
 
@@ -95,6 +96,9 @@ export default function StockLogsPage() {
           ? new Date(order.created_at).toLocaleString()
           : "No date";
 
+        // ✅ LOGIC ĐƠN GIẢN: chỉ cần check type
+        const isExport = order.type === "export";
+
         return (
           <div key={order.invoice_id} style={card}>
             {/* HEADER */}
@@ -108,17 +112,40 @@ export default function StockLogsPage() {
               }
             >
               <div>
-                <h3 style={{ margin: 0 }}>
-                  🧾 INV-{shortId} {isOpen ? "▲" : "▼"}
+                <h3
+                  style={{
+                    margin: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <span
+                    style={{
+                      background: isExport ? "#ef4444" : "#22c55e",
+                      color: "white",
+                      padding: "4px 10px",
+                      borderRadius: 6,
+                      fontSize: 14,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    🧾 INV-{shortId}
+                  </span>
+
+                  <span style={{ fontSize: 14, color: "#64748b" }}>
+                    {isOpen ? "▲" : "▼"}
+                  </span>
                 </h3>
+
                 <p style={meta}>👤 {order.user}</p>
                 <p style={meta}>🕒 {date}</p>
               </div>
 
-              <div style={totalStyle}>💰 {total.toLocaleString()}đ</div>
+              <div style={totalStyle}>💰 {formatVND(total)}</div>
             </div>
 
-            {/* ✅ FIX: chỉ render khi mở */}
+            {/* DROPDOWN */}
             {isOpen && (
               <div style={dropdown}>
                 {order.items.map((i) => (
@@ -141,7 +168,7 @@ export default function StockLogsPage() {
                     <span>x{i.quantity}</span>
 
                     <span style={{ textAlign: "right" }}>
-                      {(i.price || 0).toLocaleString()}đ
+                      {formatVND(i.price || 0)}
                     </span>
                   </div>
                 ))}
