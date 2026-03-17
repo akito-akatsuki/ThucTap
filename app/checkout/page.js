@@ -249,7 +249,7 @@ export default function CheckoutPage() {
               <h2>Scan to Pay</h2>
 
               <img
-                src={`https://img.vietqr.io/image/VCB-1018309045-compact.png?amount=${total}&addInfo=POS`}
+                src={`https://img.vietqr.io/image/VCB-1018309045-compact.png?amount=${total}&addInfo=Thanh Toán Đơn Hàng`}
                 width="220"
               />
 
