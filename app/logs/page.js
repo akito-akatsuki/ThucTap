@@ -56,7 +56,9 @@ export default function LogsPage() {
         return (
           <div key={order.invoice_id} style={card}>
             <h3 style={invoice}>🧾 INV-{shortId}</h3>
-            <p style={date}>{new Date(order.created_at).toLocaleString()}</p>
+            <td className="py-2">
+              {log.created_at ? new Date(log.created_at).toLocaleString() : "—"}
+            </td>
 
             <ul style={list}>
               {order.items.map((i) => (
