@@ -9,31 +9,43 @@ export default function LogsPage() {
   const loadLogs = async () => {
     const res = await fetch("/api/log");
     const json = await res.json();
+
+    console.log("🔥 DATA:", json);
+
     setLogs(json.data || []);
   };
 
   useEffect(() => {
     loadLogs();
-    console.log("DATA:", json);
   }, []);
 
-  /* SORT (FIX NGƯỢC NGÀY) */
+  /* =========================
+     SORT THEO NGÀY
+  ========================= */
+
   const safeLogs = (logs || []).sort(
     (a, b) =>
       new Date(b.invoices?.created_at || 0) -
       new Date(a.invoices?.created_at || 0),
   );
 
-  /* GROUP BY INVOICE (SAFE) */
-  const grouped = safeLogs.reduce((acc, item) => {
-    if (!item.invoice_id) return acc; // tránh data lỗi
+  /* =========================
+     GROUP BY INVOICE
+  ========================= */
 
+  const grouped = safeLogs.reduce((acc, item) => {
     const key = item.invoice_id;
+    if (!key) return acc;
 
     if (!acc[key]) {
       acc[key] = {
         invoice_id: key,
         created_at: item.invoices?.created_at,
+        user_name:
+          item.invoices?.users?.name ||
+          item.invoices?.created_name ||
+          item.invoices?.users?.email ||
+          "Unknown",
         items: [],
       };
     }
@@ -42,7 +54,10 @@ export default function LogsPage() {
     return acc;
   }, {});
 
-  /* FILTER SEARCH (SAFE 100%) */
+  /* =========================
+     FILTER
+  ========================= */
+
   const filtered = Object.values(grouped).filter((order) =>
     (order.invoice_id || "").toLowerCase().includes(search.toLowerCase()),
   );
@@ -51,7 +66,6 @@ export default function LogsPage() {
     <div style={page}>
       <h1 style={title}>📋 Orders</h1>
 
-      {/* SEARCH */}
       <input
         style={input}
         placeholder="Search invoice..."
@@ -59,31 +73,34 @@ export default function LogsPage() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {/* LIST */}
       {filtered.map((order) => {
-        const shortId = order.invoice_id
-          ? order.invoice_id.slice(0, 8).toUpperCase()
-          : "UNKNOWN";
+        const shortId = order.invoice_id.slice(0, 8).toUpperCase();
+
+        const total = order.items.reduce((sum, i) => sum + i.qty * i.price, 0);
 
         return (
           <div key={order.invoice_id} style={card}>
             <h3 style={invoice}>🧾 INV-{shortId}</h3>
 
-            {/* DATE */}
+            {/* 👤 USER */}
+            <p style={user}>👤 {order.user_name}</p>
+
+            {/* 🕒 DATE */}
             <p style={date}>
               {order.created_at
                 ? new Date(order.created_at).toLocaleString()
                 : "No date"}
             </p>
 
-            {/* ITEMS */}
             <ul style={list}>
               {order.items.map((i) => (
                 <li key={i.id} style={item}>
-                  {i.products?.name} x{i.qty}
+                  {i.products?.name} x{i.qty} — {i.price.toLocaleString()}đ
                 </li>
               ))}
             </ul>
+
+            <p style={totalStyle}>💰 Total: {total.toLocaleString()}đ</p>
           </div>
         );
       })}
@@ -91,7 +108,9 @@ export default function LogsPage() {
   );
 }
 
-/* STYLES */
+/* =========================
+   STYLES
+========================= */
 
 const page = {
   padding: 40,
@@ -124,6 +143,13 @@ const invoice = {
   marginBottom: 5,
 };
 
+const user = {
+  fontSize: 14,
+  fontWeight: "bold",
+  color: "#2563eb",
+  marginBottom: 5,
+};
+
 const date = {
   fontSize: 12,
   color: "#666",
@@ -136,4 +162,10 @@ const list = {
 
 const item = {
   marginBottom: 5,
+};
+
+const totalStyle = {
+  marginTop: 10,
+  fontWeight: "bold",
+  color: "#16a34a",
 };

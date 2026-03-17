@@ -2,28 +2,30 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   const { data, error } = await supabase
-    .from("stock_movements")
+    .from("invoice_items")
     .select(
       `
-    id,
-    type,
-    quantity,
-    created_by,
-    created_at,
-    products (
-      name
+      id,
+      qty,
+      price,
+      invoice_id,
+      invoices (
+        id,
+        created_at,
+        created_by,
+        created_name
+      ),
+      products (
+        name
+      )
+    `,
     )
-  `,
-    )
-    .order("created_at", { ascending: false })
-    .limit(50);
+    .order("id", { ascending: false });
 
   if (error) {
-    console.log("Log API error:", error);
+    console.log("API error:", error);
     return Response.json({ error: error.message });
   }
 
-  return Response.json({
-    data,
-  });
+  return Response.json({ data });
 }
