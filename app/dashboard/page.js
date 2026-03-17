@@ -125,7 +125,7 @@ export default function Dashboard() {
         {
           event: "INSERT",
           schema: "public",
-          table: "logs", // 🔥 CHỈ NGHE LOG
+          table: "stock_movements",
         },
         () => {
           loadProducts();
