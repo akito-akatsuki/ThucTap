@@ -8,12 +8,12 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
   const [price, setPrice] = useState(product?.price || "");
   const [minStock, setMinStock] = useState(product?.min_stock || 5);
   const [qty, setQty] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [category, setCategory] = useState(product?.category_id || "");
   const [categories, setCategories] = useState([]);
 
   /* LOAD CATEGORIES */
-
   useEffect(() => {
     const load = async () => {
       const res = await fetch("/api/categories");
@@ -24,26 +24,13 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
     load();
   }, []);
 
-  const submit = () => {
-    if (type === "edit") {
-      if (!name.trim()) {
-        toast.error("Enter product name");
-        return;
-      }
+  /* =========================
+     SUBMIT (FIXED)
+  ========================= */
+  const submit = async () => {
+    if (loading) return;
 
-      if (isNaN(price)) {
-        toast.error("Price must be a number");
-        return;
-      }
-
-      onSubmit({
-        name,
-        price: Number(price),
-        min_stock: Number(minStock),
-        category_id: category,
-      });
-    }
-
+    /* IMPORT */
     if (type === "import") {
       if (!qty) {
         toast.error("Enter quantity");
@@ -55,9 +42,51 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
         return;
       }
 
-      onSubmit({
-        qty: Number(qty),
-      });
+      try {
+        setLoading(true);
+
+        await onSubmit({
+          qty: Number(qty),
+        });
+
+        onClose(); // 🔥 đóng ngay
+      } catch (err) {
+        console.log(err);
+        toast.error("Import failed");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    /* EDIT */
+    if (type === "edit") {
+      if (!name.trim()) {
+        toast.error("Enter product name");
+        return;
+      }
+
+      if (isNaN(price)) {
+        toast.error("Price must be a number");
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        await onSubmit({
+          name,
+          price: Number(price),
+          min_stock: Number(minStock),
+          category_id: category,
+        });
+
+        onClose();
+      } catch (err) {
+        console.log(err);
+        toast.error("Update failed");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -72,6 +101,7 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
       >
         <h3>{type === "edit" ? "Edit Product" : "Import Stock"}</h3>
 
+        {/* EDIT FORM */}
         {type === "edit" && (
           <div
             style={{
@@ -83,8 +113,6 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
           >
             <span>Name:</span>
             <input
-              placeholder="Product name"
-              autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
               style={input}
@@ -93,7 +121,6 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
             <span>Price:</span>
             <input
               type="number"
-              placeholder="Price"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               style={input}
@@ -102,7 +129,6 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
             <span>Min stock:</span>
             <input
               type="number"
-              placeholder="Minimum stock"
               value={minStock}
               onChange={(e) => setMinStock(e.target.value)}
               style={input}
@@ -115,7 +141,6 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
               style={input}
             >
               <option value="">Select category</option>
-
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -125,20 +150,21 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
           </div>
         )}
 
+        {/* IMPORT FORM */}
         {type === "import" && (
           <input
             type="number"
             placeholder="Quantity"
-            autoFocus
             value={qty}
             onChange={(e) => setQty(e.target.value)}
             style={input}
           />
         )}
 
+        {/* ACTIONS */}
         <div style={actions}>
-          <button type="submit" style={saveBtn}>
-            Save
+          <button type="submit" style={saveBtn} disabled={loading}>
+            {loading ? "Saving..." : "Save"}
           </button>
 
           <button type="button" onClick={onClose} style={cancelBtn}>
@@ -177,8 +203,6 @@ const input = {
   padding: "8px 10px",
   borderRadius: "6px",
   border: "1px solid #ccc",
-  fontSize: "14px",
-  boxSizing: "border-box",
 };
 
 const actions = {

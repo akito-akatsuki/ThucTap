@@ -122,20 +122,14 @@ export default function Dashboard() {
 
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "products" },
-        loadProducts,
-      )
-
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "inventory" },
-        loadProducts,
-      )
-
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "sales" },
-        loadProducts,
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "logs", // 🔥 CHỈ NGHE LOG
+        },
+        () => {
+          loadProducts();
+        },
       )
 
       .subscribe();
@@ -144,7 +138,6 @@ export default function Dashboard() {
       supabase.removeChannel(channel);
     };
   }, []);
-
   /* GET ROLE */
 
   useEffect(() => {

@@ -4,7 +4,6 @@ export async function POST(req) {
   try {
     const body = await req.json();
     const { product_id, quantity, user } = body;
-
     if (!product_id || !quantity) {
       return Response.json(
         { error: "Missing product_id or quantity" },
