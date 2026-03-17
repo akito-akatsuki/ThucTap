@@ -5,20 +5,20 @@ export async function GET() {
     .from("stock_movements")
     .select(
       `
-      id,
-      quantity,
-      price,
-      type,
-      created_at,
-      created_by,
-      invoice_id,
-      products ( name ),
-      invoices (
         id,
+        quantity,
+        price,
+        type,
         created_at,
-        created_name
-      )
-    `,
+        created_by,
+        invoice_id,
+        products ( name ),
+        invoices (
+          id,
+          created_at,
+          created_name
+        )
+      `,
     )
     .order("created_at", { ascending: false });
 

@@ -5,14 +5,15 @@ import { useEffect, useState } from "react";
 export default function StockLogsPage() {
   const [logs, setLogs] = useState([]);
   const [search, setSearch] = useState("");
-  const [open, setOpen] = useState({}); // 🔥 dropdown state
+  const [open, setOpen] = useState({}); // dropdown state
 
+  /* =========================
+     LOAD LOGS
+  ========================= */
   const loadLogs = async () => {
     try {
       const res = await fetch("/api/log");
       const json = await res.json();
-
-      console.log("🔥 LOG DATA:", json);
 
       setLogs(json.data || []);
     } catch (err) {
@@ -117,31 +118,35 @@ export default function StockLogsPage() {
               <div style={totalStyle}>💰 {total.toLocaleString()}đ</div>
             </div>
 
-            {/* DROPDOWN */}
-            <div style={dropdown}>
-              {order.items.map((i) => (
-                <div
-                  key={i.id}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "2fr 1fr 1fr 1fr",
-                    gap: "10px",
-                    padding: "6px 0",
-                    alignItems: "center",
-                  }}
-                >
-                  <span>{i.products?.name || "Unknown"}</span>
+            {/* ✅ FIX: chỉ render khi mở */}
+            {isOpen && (
+              <div style={dropdown}>
+                {order.items.map((i) => (
+                  <div
+                    key={i.id}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "2fr 1fr 1fr 1fr",
+                      gap: "10px",
+                      padding: "6px 0",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span>{i.products?.name || "Unknown"}</span>
 
-                  <span>{i.type === "export" ? "📦 Export" : "📥 Import"}</span>
+                    <span>
+                      {i.type === "export" ? "📦 Export" : "📥 Import"}
+                    </span>
 
-                  <span>x{i.quantity}</span>
+                    <span>x{i.quantity}</span>
 
-                  <span style={{ textAlign: "right" }}>
-                    {(i.price || 0).toLocaleString()}đ
-                  </span>
-                </div>
-              ))}
-            </div>
+                    <span style={{ textAlign: "right" }}>
+                      {(i.price || 0).toLocaleString()}đ
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
@@ -196,13 +201,6 @@ const dropdown = {
   marginTop: 10,
   borderTop: "1px solid #eee",
   paddingTop: 10,
-};
-
-const item = {
-  display: "flex",
-  justifyContent: "space-between",
-  padding: "6px 0",
-  fontSize: 14,
 };
 
 const totalStyle = {

@@ -115,7 +115,7 @@ ADD PRODUCT
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { name, price, category_id } = body;
+    const { name, price, category_id, user } = body;
 
     if (!name) {
       return Response.json({
@@ -125,7 +125,9 @@ export async function POST(req) {
 
     const barcode = generateBarcode();
 
-    /* CREATE PRODUCT */
+    /* =========================
+       CREATE PRODUCT
+    ========================= */
 
     const { data, error } = await supabase
       .from("products")
@@ -144,25 +146,72 @@ export async function POST(req) {
       });
     }
 
-    /* CREATE INVENTORY */
+    /* =========================
+       CREATE INVENTORY
+    ========================= */
 
     await supabase.from("inventory").insert({
       product_id: data.id,
       stock: 0,
     });
 
-    /* GENERATE QR */
+    /* =========================
+       USER INFO
+    ========================= */
+
+    const email = user?.email || "unknown@email.com";
+    const nameUser = user?.user_metadata?.name || "Unknown";
+    const username = `${email} (${nameUser})`;
+
+    /* =========================
+       🔥 CREATE INVOICE (QUAN TRỌNG)
+    ========================= */
+
+    const { data: invoice, error: invoiceError } = await supabase
+      .from("invoices")
+      .insert({
+        total: 0,
+        created_name: username,
+      })
+      .select()
+      .single();
+
+    if (invoiceError) {
+      return Response.json({
+        error: invoiceError.message,
+      });
+    }
+
+    /* =========================
+       🔥 CREATE LOG (CÓ invoice_id)
+    ========================= */
+
+    await supabase.from("stock_movements").insert({
+      product_id: data.id,
+      type: "create",
+      quantity: 0,
+      created_by: username,
+      invoice_id: invoice.id, // ✅ FIX QUAN TRỌNG
+    });
+
+    /* =========================
+       GENERATE QR
+    ========================= */
 
     const qr = await QRCode.toDataURL(barcode.toString());
 
-    /* GET SELLERS */
+    /* =========================
+       GET SELLERS
+    ========================= */
 
     const { data: sellers } = await supabase
       .from("users")
       .select("email")
       .eq("role", "seller");
 
-    /* SEND EMAIL BACKGROUND */
+    /* =========================
+       SEND EMAIL (BACKGROUND)
+    ========================= */
 
     if (sellers && sellers.length > 0) {
       const transporter = nodemailer.createTransport({

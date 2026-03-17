@@ -180,6 +180,12 @@ export default function Dashboard() {
     const loading = toast.loading("Adding product...");
 
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const user = session?.user;
+
       const res = await fetch("/api/products", {
         method: "POST",
         headers: {
@@ -189,6 +195,7 @@ export default function Dashboard() {
           name,
           price: Number(price),
           category_id: category || null,
+          user, // 🔥 THÊM DÒNG NÀY
         }),
       });
 
