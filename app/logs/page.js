@@ -14,6 +14,7 @@ export default function LogsPage() {
 
   useEffect(() => {
     loadLogs();
+    console.log("DATA:", json);
   }, []);
 
   /* SORT (FIX NGƯỢC NGÀY) */
