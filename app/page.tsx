@@ -14,12 +14,26 @@ import {
 } from "recharts";
 import AIBot from "@/components/AIBot";
 
+/* =========================
+   TYPES (fix TS sạch)
+========================= */
+type Log = {
+  id: string;
+  invoice_id?: string;
+  created_at?: string;
+  created_by?: string;
+  quantity: number;
+  price?: number;
+  type: string;
+  products?: { name?: string };
+};
+
 export default function Home() {
   const router = useRouter();
 
   const [chartData, setChartData] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<Log[]>([]);
 
   const colors = [
     "#2563eb",
@@ -40,8 +54,6 @@ export default function Home() {
       const productRes = await fetch("/api/products");
       const productJson = await productRes.json();
 
-      console.log("PRODUCTS:", productJson);
-
       const productList = productJson.data || [];
       setProducts(productList);
 
@@ -58,9 +70,6 @@ export default function Home() {
       });
 
       const aiJson = await aiRes.json();
-
-      console.log("AI RESULT:", aiJson);
-
       const ai = aiJson.data || [];
 
       const today = new Date();
@@ -93,9 +102,6 @@ export default function Home() {
     try {
       const res = await fetch("/api/log");
       const json = await res.json();
-
-      console.log("STOCK LOG:", json);
-
       setLogs(json.data || []);
     } catch (err) {
       console.error("LOG ERROR:", err);
@@ -108,7 +114,6 @@ export default function Home() {
         <h1 className="text-3xl font-bold">Inventory AI</h1>
 
         {/* CHART */}
-
         <div className="bg-white shadow rounded-xl p-6">
           <h2 className="text-xl font-semibold mb-4">
             AI Sales Prediction (Next 7 Days)
@@ -137,8 +142,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* STOCK LOG */}
-
+        {/* =========================
+            STOCK LOG (FIXED)
+        ========================= */}
         <div className="bg-white shadow rounded-xl p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Stock Movement Logs</h2>
@@ -151,49 +157,110 @@ export default function Home() {
             </button>
           </div>
 
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">Product</th>
-                <th className="text-left py-2">Type</th>
-                <th className="text-left py-2">Qty</th>
-                <th className="text-left py-2">By</th>
-                <th className="text-left py-2">Date</th>
-              </tr>
-            </thead>
+          {Object.values(
+            [...logs]
+              .sort(
+                (a, b) =>
+                  new Date(b.created_at || 0).getTime() -
+                  new Date(a.created_at || 0).getTime(),
+              )
+              .reduce<Record<string, any>>((acc, log) => {
+                const key = log.invoice_id || "no-invoice";
 
-            <tbody>
-              {logs
-                .slice(0, 3) // 👈 chỉ lấy 3 log gần nhất
-                .map((log) => (
-                  <tr
-                    key={log.id}
-                    className="border-b hover:bg-gray-50 transition"
-                  >
-                    <td className="py-2 font-medium">
-                      {log.products?.name || "Unknown"}
-                    </td>
+                if (!acc[key]) {
+                  acc[key] = {
+                    invoice_id: key,
+                    created_at: log.created_at,
+                    user: log.created_by || "POS",
+                    items: [],
+                  };
+                }
 
-                    <td className="py-2">
-                      {log.type === "import" ? "📦 Import" : "🛒 Export"}
-                    </td>
+                acc[key].items.push(log);
+                return acc;
+              }, {}),
+          )
+            .slice(0, 3)
+            .map((order: any) => {
+              const shortId =
+                order.invoice_id !== "no-invoice"
+                  ? order.invoice_id.slice(0, 8).toUpperCase()
+                  : "N/A";
 
-                    <td className="py-2 text-center">x{log.quantity}</td>
+              const total = order.items.reduce(
+                (sum: number, i: Log) => sum + i.quantity * (i.price || 0),
+                0,
+              );
 
-                    <td className="py-2 text-gray-600">
-                      {log.created_by || "System"}
-                    </td>
-
-                    <td className="py-2 text-sm text-gray-500">
-                      {new Date(log.created_at).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+              return (
+                <DashboardLogItem
+                  key={order.invoice_id}
+                  order={order}
+                  shortId={shortId}
+                  total={total}
+                />
+              );
+            })}
         </div>
       </div>
+
       <AIBot />
     </main>
+  );
+}
+
+/* =========================
+   DROPDOWN COMPONENT
+========================= */
+
+function DashboardLogItem({
+  order,
+  shortId,
+  total,
+}: {
+  order: any;
+  shortId: string;
+  total: number;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="border rounded-xl p-4 mb-3">
+      {/* HEADER */}
+      <div
+        onClick={() => setOpen(!open)}
+        className="flex justify-between cursor-pointer"
+      >
+        <div>
+          <h3 className="font-semibold">
+            🧾 INV-{shortId} {open ? "▲" : "▼"}
+          </h3>
+          <p className="text-xs text-gray-500">👤 {order.user}</p>
+        </div>
+
+        <div className="font-bold text-green-600">
+          💰 {total.toLocaleString()}đ
+        </div>
+      </div>
+
+      {/* DROPDOWN */}
+      {open && (
+        <div className="mt-3 border-t pt-3">
+          {order.items.map((i: Log) => (
+            <div key={i.id} className="grid grid-cols-4 gap-2 py-1 text-sm">
+              <span>{i.products?.name || "Unknown"}</span>
+
+              <span>{i.type === "export" ? "📦 Export" : "📥 Import"}</span>
+
+              <span>x{i.quantity}</span>
+
+              <span className="text-right">
+                {(i.price || 0).toLocaleString()}đ
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
