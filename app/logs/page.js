@@ -16,8 +16,10 @@ export default function LogsPage() {
     loadLogs();
   }, []);
 
-  /* GROUP BY INVOICE */
+  /* GROUP BY INVOICE (SAFE) */
   const grouped = logs.reduce((acc, item) => {
+    if (!item.invoice_id) return acc; // 🔥 tránh crash
+
     const key = item.invoice_id;
 
     if (!acc[key]) {
@@ -32,9 +34,9 @@ export default function LogsPage() {
     return acc;
   }, {});
 
-  /* FILTER SEARCH */
+  /* FILTER SEARCH (SAFE) */
   const filtered = Object.values(grouped).filter((order) =>
-    order.invoice_id.toLowerCase().includes(search.toLowerCase()),
+    order.invoice_id?.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -51,14 +53,20 @@ export default function LogsPage() {
 
       {/* LIST */}
       {filtered.map((order) => {
-        const shortId = order.invoice_id.slice(0, 8).toUpperCase();
+        const shortId = order.invoice_id
+          ? order.invoice_id.slice(0, 8).toUpperCase()
+          : "UNKNOWN";
 
         return (
           <div key={order.invoice_id} style={card}>
             <h3 style={invoice}>🧾 INV-{shortId}</h3>
-            <td className="py-2">
-              {log.created_at ? new Date(log.created_at).toLocaleString() : "—"}
-            </td>
+
+            {/* DATE FIX */}
+            <p style={date}>
+              {order.created_at
+                ? new Date(order.created_at).toLocaleString()
+                : "No date"}
+            </p>
 
             <ul style={list}>
               {order.items.map((i) => (
