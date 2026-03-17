@@ -30,25 +30,29 @@ export async function POST(req) {
     /* =========================
        GET USER
     ========================= */
+    /* =========================
+   GET USER (SAFE VERSION)
+========================= */
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
 
-    console.log("USER:", user); // 🔥 debug
+    // fallback để không crash checkout
+    let userId = "system";
+    let name = "POS";
+    let username = "POS";
 
-    if (userError || !user) {
-      return Response.json({
-        success: false,
-        error: "Unauthorized",
-      });
+    if (user && !userError) {
+      userId = user.id;
+
+      const email = user.email || "POS";
+      name = user.user_metadata?.name || "Unknown";
+
+      username = `${email} (${name})`;
     }
 
-    const userId = user.id;
-    const email = user.email || "POS";
-    const name = user.user_metadata?.name || "Unknown";
-    const username = `${email} (${name})`;
-
+    console.log("USER:", user);
     /* =========================
        TOTAL
     ========================= */
