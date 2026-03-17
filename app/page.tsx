@@ -163,23 +163,32 @@ export default function Home() {
             </thead>
 
             <tbody>
-              {logs.slice(0, 5).map((log) => (
-                <tr key={log.id} className="border-b">
-                  <td className="py-2">{log.products?.name}</td>
+              {logs
+                .slice(0, 3) // 👈 chỉ lấy 3 log gần nhất
+                .map((log) => (
+                  <tr
+                    key={log.id}
+                    className="border-b hover:bg-gray-50 transition"
+                  >
+                    <td className="py-2 font-medium">
+                      {log.products?.name || "Unknown"}
+                    </td>
 
-                  <td className="py-2">
-                    {log.type === "import" ? "📦 Import" : "🛒 Export"}
-                  </td>
+                    <td className="py-2">
+                      {log.type === "import" ? "📦 Import" : "🛒 Export"}
+                    </td>
 
-                  <td className="py-2">{log.quantity}</td>
+                    <td className="py-2 text-center">x{log.quantity}</td>
 
-                  <td className="py-2">{log.created_by}</td>
+                    <td className="py-2 text-gray-600">
+                      {log.created_by || "System"}
+                    </td>
 
-                  <td className="py-2">
-                    {new Date(log.created_at).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
+                    <td className="py-2 text-sm text-gray-500">
+                      {new Date(log.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
