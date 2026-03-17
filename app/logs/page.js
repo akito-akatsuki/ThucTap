@@ -16,9 +16,16 @@ export default function LogsPage() {
     loadLogs();
   }, []);
 
+  /* SORT (FIX NGƯỢC NGÀY) */
+  const safeLogs = (logs || []).sort(
+    (a, b) =>
+      new Date(b.invoices?.created_at || 0) -
+      new Date(a.invoices?.created_at || 0),
+  );
+
   /* GROUP BY INVOICE (SAFE) */
-  const grouped = logs.reduce((acc, item) => {
-    if (!item.invoice_id) return acc; // 🔥 tránh crash
+  const grouped = safeLogs.reduce((acc, item) => {
+    if (!item.invoice_id) return acc; // tránh data lỗi
 
     const key = item.invoice_id;
 
@@ -34,9 +41,9 @@ export default function LogsPage() {
     return acc;
   }, {});
 
-  /* FILTER SEARCH (SAFE) */
+  /* FILTER SEARCH (SAFE 100%) */
   const filtered = Object.values(grouped).filter((order) =>
-    order.invoice_id?.toLowerCase().includes(search.toLowerCase()),
+    (order.invoice_id || "").toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -61,13 +68,14 @@ export default function LogsPage() {
           <div key={order.invoice_id} style={card}>
             <h3 style={invoice}>🧾 INV-{shortId}</h3>
 
-            {/* DATE FIX */}
+            {/* DATE */}
             <p style={date}>
               {order.created_at
                 ? new Date(order.created_at).toLocaleString()
                 : "No date"}
             </p>
 
+            {/* ITEMS */}
             <ul style={list}>
               {order.items.map((i) => (
                 <li key={i.id} style={item}>
