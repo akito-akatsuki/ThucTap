@@ -17,7 +17,10 @@ export async function POST(req) {
       data: { user: authUser },
     } = await supabase.auth.getUser();
 
-    const userEmail = authUser?.email || user || "POS";
+    const email = authUser?.email || "POS";
+    const name = authUser?.user_metadata?.name || "Unknown";
+
+    const username = `${email} (${name})`;
 
     /* TOTAL */
 
@@ -108,7 +111,7 @@ export async function POST(req) {
           type: "export",
           quantity: item.qty,
           price: item.price,
-          created_by: userEmail,
+          created_by: username,
           note: "sale",
         });
 
