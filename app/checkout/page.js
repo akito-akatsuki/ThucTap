@@ -134,6 +134,13 @@ export default function CheckoutPage() {
         }}
       >
         <h1 style={{ marginBottom: 20 }}>🧾 Checkout</h1>
+        {loading && (
+          <div
+            style={{ display: "flex", justifyContent: "center", margin: 20 }}
+          >
+            <div className="loader" />
+          </div>
+        )}
 
         <table
           style={{
@@ -208,30 +215,40 @@ export default function CheckoutPage() {
 
         <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
           <button
+            disabled={loading}
             onClick={() => {
               setPaymentMethod("cash");
               checkout();
             }}
-            style={btn}
+            style={{
+              ...btn,
+              opacity: loading ? 0.6 : 1,
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
           >
-            💵 Cash
+            {loading ? "Processing..." : "💵 Cash"}
           </button>
 
           <button
             onClick={() => setPaymentMethod("qr")}
-            style={{ ...btn, background: "#2563eb" }}
+            style={{
+              ...btn,
+              opacity: loading ? 0.6 : 1,
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
           >
             📱 QR Pay
           </button>
 
           <button
+            disabled={loading}
             onClick={() => {
               setPaymentMethod("card");
               checkout();
             }}
             style={{ ...btn, background: "#7c3aed" }}
           >
-            💳 Card
+            {loading ? "Processing..." : "💳 Card"}
           </button>
         </div>
 
@@ -249,8 +266,16 @@ export default function CheckoutPage() {
 
               <p style={{ fontWeight: "bold" }}>Total: {total}VNĐ</p>
 
-              <button onClick={checkout} style={btn}>
-                ✓ Confirm Payment
+              <button
+                onClick={checkout}
+                style={{
+                  ...btn,
+                  opacity: loading ? 0.6 : 1,
+                  cursor: loading ? "not-allowed" : "pointer",
+                }}
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "✓ Confirm Payment"}
               </button>
 
               <button
