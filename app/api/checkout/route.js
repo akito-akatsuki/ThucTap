@@ -15,8 +15,8 @@ export async function POST(req) {
 
     const email = user?.email || "POS";
     const name = user?.user_metadata?.name || "Unknown";
-
     const username = `${email} (${name})`;
+
     /* TOTAL */
 
     const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
@@ -34,87 +34,73 @@ export async function POST(req) {
       throw invoiceError;
     }
 
-    /* PROCESS ITEMS */
+    /* PROCESS ITEMS (PARALLEL) */
 
-    for (const item of items) {
+    const tasks = items.map(async (item) => {
       if (!item.id) {
         throw new Error("Product id missing");
       }
 
       /* SAVE INVOICE ITEM */
-
-      const { error: itemError } = await supabase.from("invoice_items").insert({
+      const itemInsert = supabase.from("invoice_items").insert({
         invoice_id: invoice.id,
         product_id: item.id,
         qty: item.qty,
         price: item.price,
       });
 
-      if (itemError) {
-        console.log("Invoice item error:", itemError);
-        throw itemError;
-      }
-
-      /* GET CURRENT STOCK */
-
-      const { data: stockData, error: stockError } = await supabase
-        .from("inventory")
-        .select("stock")
-        .eq("product_id", item.id)
-        .single();
-
-      if (stockError || !stockData) {
-        console.log("Inventory error:", stockError);
-        throw new Error("Inventory not found");
-      }
-
-      const newStock = stockData.stock - item.qty;
-
-      /* LOW STOCK ALERT */
-
-      if (newStock <= 5) {
-        await fetch(`${req.nextUrl.origin}/api/low-stock`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: item.name,
-            stock: newStock,
-          }),
-        });
-      }
-
       /* SALES DATASET */
-
-      const { error: salesError } = await supabase.from("sales").insert({
+      const salesInsert = supabase.from("sales").insert({
         product_id: item.id,
         quantity: item.qty,
         price: item.price,
       });
 
-      if (salesError) {
-        console.log("Sales error:", salesError);
+      /* STOCK MOVEMENT (trigger sẽ update stock) */
+      const movementInsert = supabase.from("stock_movements").insert({
+        product_id: item.id,
+        type: "export",
+        quantity: item.qty,
+        price: item.price,
+        created_by: username,
+        note: "sale",
+      });
+
+      /* LOW STOCK ALERT (KHÔNG BLOCK) */
+      fetch(`${req.nextUrl.origin}/api/low-stock`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: item.name,
+        }),
+      }).catch((err) => console.log("Low stock error:", err));
+
+      /* chạy song song 3 query */
+      const [itemRes, salesRes, movementRes] = await Promise.all([
+        itemInsert,
+        salesInsert,
+        movementInsert,
+      ]);
+
+      if (itemRes.error) {
+        console.log("Invoice item error:", itemRes.error);
+        throw itemRes.error;
       }
 
-      /* EXPORT STOCK MOVEMENT (TRIGGER UPDATE STOCK) */
-
-      const { error: movementError } = await supabase
-        .from("stock_movements")
-        .insert({
-          product_id: item.id,
-          type: "export",
-          quantity: item.qty,
-          price: item.price,
-          created_by: username,
-          note: "sale",
-        });
-
-      if (movementError) {
-        console.log("Movement error:", movementError);
-        throw movementError;
+      if (salesRes.error) {
+        console.log("Sales error:", salesRes.error);
       }
-    }
+
+      if (movementRes.error) {
+        console.log("Movement error:", movementRes.error);
+        throw movementRes.error;
+      }
+    });
+
+    /* đợi tất cả items xử lý xong */
+    await Promise.all(tasks);
 
     return Response.json({
       success: true,
