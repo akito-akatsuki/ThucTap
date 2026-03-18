@@ -56,7 +56,7 @@ export default function Navbar() {
         .from("users")
         .select("role")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setRole(data.role);
