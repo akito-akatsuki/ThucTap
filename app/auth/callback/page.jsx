@@ -9,9 +9,12 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     const handleAuth = async () => {
-      const { data, error } = await supabase.auth.getSessionFromUrl();
-      if (error) console.error(error);
-      else if (data.session) router.replace("/dashboard");
+      // Lấy session từ URL hash
+      const { data, error } = await supabase.auth.getSessionFromUrl({
+        storeSession: true,
+      });
+      if (error) console.error(error.message);
+      else if (data.session) router.replace("/dashboard"); // redirect sau login
     };
     handleAuth();
   }, [router]);
