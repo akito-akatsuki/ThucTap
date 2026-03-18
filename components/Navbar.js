@@ -6,64 +6,64 @@ import { supabase } from "@/lib/supabase";
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
 
+  // Lấy session lúc load và lắng nghe auth change
   useEffect(() => {
-    getUser();
+    const init = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+    init();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
+    const { subscription } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
       },
     );
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  const getUser = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+  // Lấy role khi user thay đổi
+  useEffect(() => {
+    const getRole = async () => {
+      if (!user) {
+        setRole(null);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    setUser(session?.user ?? null);
-  };
+      if (error) console.error(error);
+      setRole(data?.role ?? null);
+    };
+    getRole();
+  }, [user]);
+
   const login = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin + "/auth/callback" },
+      options: { redirectTo: window.location.origin }, // redirect về /
     });
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setRole(null);
   };
 
   const avatar =
     user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const name = user?.user_metadata?.full_name;
   const email = user?.email;
-  const [role, setRole] = useState(null);
-  useEffect(() => {
-    const getRole = async () => {
-      if (!user) return;
 
-      const { data } = await supabase
-        .from("users")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (data?.role) {
-        setRole(data.role);
-      } else {
-        setRole(null);
-      }
-    };
-
-    getRole();
-  }, [user]);
   return (
     <div style={nav}>
       <Link href="/" style={logo}>
@@ -85,6 +85,7 @@ export default function Navbar() {
             Employees
           </Link>
         )}
+
         {!user ? (
           <button onClick={login} style={loginBtn}>
             Login Google
@@ -96,15 +97,12 @@ export default function Navbar() {
             ) : (
               <div style={avatarFallback}>{email?.charAt(0).toUpperCase()}</div>
             )}
-
             <div>
               <div style={nameStyle}>
-                {name}
-                {role && <span style={roleStyle}>({role})</span>}
+                {name} {role && <span style={roleStyle}>({role})</span>}
               </div>
               <div style={emailStyle}>{email}</div>
             </div>
-
             <button onClick={logout} style={logoutBtn}>
               Logout
             </button>
@@ -115,6 +113,7 @@ export default function Navbar() {
   );
 }
 
+// --- Styles ---
 const nav = {
   position: "sticky",
   top: 0,
@@ -126,7 +125,6 @@ const nav = {
   alignItems: "center",
   zIndex: 1000,
 };
-
 const logo = {
   textDecoration: "none",
   background: "#2563eb",
@@ -135,19 +133,8 @@ const logo = {
   borderRadius: 8,
   fontWeight: "bold",
 };
-
-const menu = {
-  display: "flex",
-  gap: 20,
-  alignItems: "center",
-};
-
-const link = {
-  textDecoration: "none",
-  color: "#333",
-  fontWeight: 500,
-};
-
+const menu = { display: "flex", gap: 20, alignItems: "center" };
+const link = { textDecoration: "none", color: "#333", fontWeight: 500 };
 const loginBtn = {
   background: "#2563eb",
   color: "white",
@@ -156,7 +143,6 @@ const loginBtn = {
   borderRadius: 8,
   cursor: "pointer",
 };
-
 const logoutBtn = {
   background: "#ef4444",
   color: "white",
@@ -165,19 +151,8 @@ const logoutBtn = {
   borderRadius: 8,
   cursor: "pointer",
 };
-
-const userBox = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-};
-
-const avatarStyle = {
-  width: 32,
-  height: 32,
-  borderRadius: "50%",
-};
-
+const userBox = { display: "flex", alignItems: "center", gap: 10 };
+const avatarStyle = { width: 32, height: 32, borderRadius: "50%" };
 const avatarFallback = {
   width: 32,
   height: 32,
@@ -189,17 +164,8 @@ const avatarFallback = {
   justifyContent: "center",
   fontWeight: "bold",
 };
-
-const nameStyle = {
-  fontSize: 13,
-  fontWeight: 600,
-};
-
-const emailStyle = {
-  fontSize: 11,
-  color: "#666",
-};
-
+const nameStyle = { fontSize: 13, fontWeight: 600 };
+const emailStyle = { fontSize: 11, color: "#666" };
 const roleStyle = {
   marginLeft: 6,
   fontSize: 12,
