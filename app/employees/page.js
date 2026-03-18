@@ -58,9 +58,18 @@ export default function Employees() {
   const deleteUser = async (id) => {
     if (!confirm("Delete this employee?")) return;
 
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const adminEmail = session?.user?.email;
+
     await fetch("/api/users", {
       method: "DELETE",
-      body: JSON.stringify({ id }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id, adminEmail }),
     });
 
     loadUsers();
