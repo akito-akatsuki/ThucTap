@@ -158,6 +158,7 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
             value={qty}
             onChange={(e) => setQty(e.target.value)}
             style={input}
+            autoFocus
           />
         )}
 
