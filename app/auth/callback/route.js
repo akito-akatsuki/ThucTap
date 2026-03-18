@@ -1,18 +1,24 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+"use client";
 
-export async function GET(req) {
-  const requestUrl = new URL(req.url);
-  const code = requestUrl.searchParams.get("code");
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
-  if (code) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    );
+export default function AuthCallback() {
+  const router = useRouter();
 
-    await supabase.auth.exchangeCodeForSession(code);
-  }
+  useEffect(() => {
+    const handleAuth = async () => {
+      const { data, error } = await supabase.auth.getSessionFromUrl();
+      if (error) {
+        console.error(error.message);
+      } else if (data.session) {
+        // Session đã được set tự động trong Supabase client
+        router.replace("/dashboard"); // redirect sau login
+      }
+    };
+    handleAuth();
+  }, [router]);
 
-  return NextResponse.redirect(new URL("/dashboard", req.url));
+  return <div>Loading...</div>;
 }
