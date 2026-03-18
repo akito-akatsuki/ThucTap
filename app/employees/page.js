@@ -38,9 +38,18 @@ export default function Employees() {
   };
 
   const changeRole = async (id, role) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const adminEmail = session?.user?.email;
+
     await fetch("/api/users", {
       method: "PATCH",
-      body: JSON.stringify({ id, role }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id, role, adminEmail }),
     });
 
     loadUsers();
