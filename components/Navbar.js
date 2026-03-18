@@ -28,12 +28,11 @@ export default function Navbar() {
 
     setUser(session?.user ?? null);
   };
-
   const login = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`, // ✅ bắt buộc
+        redirectTo: window.location.origin,
       },
     });
   };
@@ -58,8 +57,10 @@ export default function Navbar() {
         .eq("id", user.id)
         .maybeSingle();
 
-      if (data) {
+      if (data?.role) {
         setRole(data.role);
+      } else {
+        setRole(null);
       }
     };
 
