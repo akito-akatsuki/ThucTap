@@ -1,6 +1,5 @@
 import { supabase } from "@/lib/supabase";
 import QRCode from "qrcode";
-import nodemailer from "nodemailer";
 
 /* =========================
 GET PRODUCTS / GET BY BARCODE
@@ -164,7 +163,7 @@ export async function POST(req) {
     const username = `${email} (${nameUser})`;
 
     /* =========================
-       🔥 CREATE INVOICE (QUAN TRỌNG)
+       CREATE INVOICE
     ========================= */
 
     const { data: invoice, error: invoiceError } = await supabase
@@ -183,7 +182,7 @@ export async function POST(req) {
     }
 
     /* =========================
-       🔥 CREATE LOG (CÓ invoice_id)
+       CREATE LOG
     ========================= */
 
     await supabase.from("stock_movements").insert({
@@ -191,7 +190,7 @@ export async function POST(req) {
       type: "create",
       quantity: 0,
       created_by: username,
-      invoice_id: invoice.id, // ✅ FIX QUAN TRỌNG
+      invoice_id: invoice.id,
     });
 
     /* =========================
@@ -200,57 +199,13 @@ export async function POST(req) {
 
     const qr = await QRCode.toDataURL(barcode.toString());
 
-    /* =========================
-       GET SELLERS
-    ========================= */
-
-    const { data: sellers } = await supabase
-      .from("users")
-      .select("email")
-      .eq("role", "seller");
-
-    /* =========================
-       SEND EMAIL (BACKGROUND)
-    ========================= */
-
-    if (sellers && sellers.length > 0) {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      setTimeout(async () => {
-        try {
-          await Promise.all(
-            sellers.map((s) =>
-              transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: s.email,
-                subject: "New Product QR Code",
-                html: `
-                  <h2>${name}</h2>
-                  <p>Barcode: ${barcode}</p>
-                  <p>Scan this QR:</p>
-                  <img src="${qr}" />
-                `,
-              }),
-            ),
-          );
-        } catch (err) {
-          console.log("Email error:", err);
-        }
-      }, 0);
-    }
-
     return Response.json({
       data,
       qr,
     });
   } catch (err) {
     return Response.json({
+      success: false,
       error: "Server error",
     });
   }
@@ -284,8 +239,6 @@ export async function DELETE(req) {
       success: true,
     });
   } catch (err) {
-    console.log(err);
-
     return Response.json({
       success: false,
       error: "Delete failed",
