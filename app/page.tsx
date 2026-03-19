@@ -38,6 +38,9 @@ export default function Home() {
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
 
+  // 🔥 NEW
+  const [mode, setMode] = useState<"week" | "month">("week");
+
   const colors = [
     "#2563eb",
     "#16a34a",
@@ -51,7 +54,7 @@ export default function Home() {
     loadCategories();
     loadData();
     loadLogs();
-  }, [selectedCategory]);
+  }, [selectedCategory, mode]);
 
   const loadCategories = async () => {
     try {
@@ -70,7 +73,6 @@ export default function Home() {
 
       let productList = productJson.data || [];
 
-      // lọc theo category nếu có chọn
       if (selectedCategory) {
         productList = productList.filter(
           (p: any) => p.category_id === selectedCategory,
@@ -88,6 +90,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           products: productList,
+          mode,
         }),
       });
 
@@ -95,8 +98,9 @@ export default function Home() {
       const ai = aiJson.data || [];
 
       const today = new Date();
+      const days = mode === "week" ? 7 : 30;
 
-      const formatted = Array.from({ length: 7 }).map((_, i) => {
+      const formatted = Array.from({ length: days }).map((_, i) => {
         const d = new Date(today);
         d.setDate(today.getDate() + i);
 
@@ -135,27 +139,55 @@ export default function Home() {
       <div className="max-w-6xl mx-auto space-y-8">
         <h1 className="text-3xl font-bold">Inventory AI</h1>
 
-        {/* CATEGORY FILTER */}
-        <div className="mb-4">
-          <label className="mr-2 font-semibold">Category:</label>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border px-2 py-1 rounded"
-          >
-            <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+        {/* FILTER */}
+        <div className="mb-4 flex gap-4 items-center">
+          {/* CATEGORY */}
+          <div>
+            <label className="mr-2 font-semibold">Category:</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="border px-2 py-1 rounded"
+            >
+              <option value="">All Categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 🔥 TOGGLE */}
+          <div className="flex border rounded overflow-hidden">
+            <button
+              onClick={() => setMode("week")}
+              className={`px-4 py-1 text-sm ${
+                mode === "week"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-600"
+              }`}
+            >
+              Week
+            </button>
+
+            <button
+              onClick={() => setMode("month")}
+              className={`px-4 py-1 text-sm ${
+                mode === "month"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-600"
+              }`}
+            >
+              Month
+            </button>
+          </div>
         </div>
 
         {/* CHART */}
         <div className="bg-white shadow rounded-xl p-6">
           <h2 className="text-xl font-semibold mb-4">
-            AI Sales Prediction (Next 7 Days)
+            AI Sales Prediction ({mode === "week" ? "7 Days" : "30 Days"})
           </h2>
 
           <div className="w-full h-80">
@@ -181,7 +213,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* STOCK LOG */}
+        {/* LOG */}
         <div className="bg-white shadow rounded-xl p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Stock Movement Logs</h2>
@@ -262,9 +294,9 @@ function DashboardLogItem({
 }) {
   const [open, setOpen] = useState(false);
   const isExport = order.type === "export";
+
   return (
     <div className="border rounded-xl p-4 mb-3">
-      {/* HEADER */}
       <div
         onClick={() => setOpen(!open)}
         className="flex justify-between cursor-pointer"
@@ -287,17 +319,13 @@ function DashboardLogItem({
         <div className="font-bold text-green-600">💰{formatVND(total)}</div>
       </div>
 
-      {/* DROPDOWN */}
       {open && (
         <div className="mt-3 border-t pt-3">
           {order.items.map((i: Log) => (
             <div key={i.id} className="grid grid-cols-4 gap-2 py-1 text-sm">
               <span>{i.products?.name || "Unknown"}</span>
-
               <span>{i.type === "export" ? "📦 Export" : "📥 Import"}</span>
-
               <span>x{i.quantity}</span>
-
               <span className="text-right">{formatVND(i.price || 0)}</span>
             </div>
           ))}
