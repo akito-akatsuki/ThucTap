@@ -7,9 +7,11 @@ export default function Employees() {
   const [users, setUsers] = useState([]);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     init();
+    getCurrentUser();
   }, []);
 
   const init = async () => {
@@ -25,8 +27,15 @@ export default function Employees() {
     const json = await res.json();
 
     setRole(json.role);
-
     loadUsers();
+  };
+
+  const getCurrentUser = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    setCurrentUser(user);
   };
 
   const loadUsers = async () => {
@@ -38,19 +47,20 @@ export default function Employees() {
   };
 
   const changeRole = async (id, role) => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const adminEmail = session?.user?.email;
-
-    await fetch("/api/users", {
+    const res = await fetch("/api/users", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id, role, adminEmail }),
+      body: JSON.stringify({ id, role }),
     });
+
+    const json = await res.json();
+
+    if (json.error) {
+      alert(json.error);
+      return;
+    }
 
     loadUsers();
   };
@@ -58,19 +68,20 @@ export default function Employees() {
   const deleteUser = async (id) => {
     if (!confirm("Delete this employee?")) return;
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const adminEmail = session?.user?.email;
-
-    await fetch("/api/users", {
+    const res = await fetch("/api/users", {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id, adminEmail }),
+      body: JSON.stringify({ id }),
     });
+
+    const json = await res.json();
+
+    if (json.error) {
+      alert(json.error);
+      return;
+    }
 
     loadUsers();
   };
@@ -99,44 +110,67 @@ export default function Employees() {
           </thead>
 
           <tbody>
-            {users.map((u) => (
-              <tr key={u.id} style={row}>
-                <td style={userCell}>
-                  <div style={avatar}>{u.email?.charAt(0).toUpperCase()}</div>
+            {users.map((u) => {
+              const isMe = u.id === currentUser?.id; // ✅ FIX CHÍNH
 
-                  <div>
-                    <div style={email}>{u.email}</div>
-                  </div>
-                </td>
+              return (
+                <tr key={u.id} style={row}>
+                  <td style={userCell}>
+                    <div style={avatar}>{u.email?.charAt(0).toUpperCase()}</div>
 
-                <td>
-                  <select
-                    value={u.role}
-                    style={roleSelect}
-                    onChange={(e) => changeRole(u.id, e.target.value)}
-                  >
-                    <option value="seller">seller</option>
-                    <option value="admin">admin</option>
-                  </select>
-                </td>
+                    <div>
+                      <div style={email}>
+                        {u.email}
+                        {isMe && (
+                          <span style={{ color: "red", marginLeft: 6 }}>
+                            (You)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
 
-                <td style={date}>
-                  {new Date(u.created_at).toLocaleDateString()}
-                </td>
+                  <td>
+                    <select
+                      value={u.role}
+                      disabled={isMe} // ✅ disable chính mình
+                      onChange={(e) => changeRole(u.id, e.target.value)}
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="seller">Seller</option>
+                    </select>
+                  </td>
 
-                <td>
-                  <button style={deleteBtn} onClick={() => deleteUser(u.id)}>
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  <td style={date}>
+                    {new Date(u.created_at).toLocaleDateString()}
+                  </td>
+
+                  <td>
+                    <button
+                      style={{
+                        ...deleteBtn,
+                        opacity: isMe ? 0.5 : 1,
+                        cursor: isMe ? "not-allowed" : "pointer",
+                      }}
+                      disabled={isMe} // ✅ không cho xoá mình
+                      onClick={() => deleteUser(u.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
     </div>
   );
 }
+
+/* =========================
+   STYLES
+========================= */
 
 const container = {
   padding: 40,
@@ -194,12 +228,6 @@ const email = {
   fontWeight: 500,
 };
 
-const roleSelect = {
-  padding: "5px 8px",
-  borderRadius: 6,
-  border: "1px solid #ddd",
-};
-
 const date = {
   fontSize: 13,
   color: "#666",
@@ -211,5 +239,4 @@ const deleteBtn = {
   border: "none",
   padding: "6px 10px",
   borderRadius: 6,
-  cursor: "pointer",
 };

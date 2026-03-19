@@ -1,11 +1,13 @@
 import { supabase } from "@/lib/supabase";
 
-/* GET ROLE BY EMAIL */
-
+/* =========================
+   GET USERS / GET ROLE
+========================= */
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email");
 
+  // 🔹 GET ALL USERS
   if (!email) {
     const { data, error } = await supabase
       .from("users")
@@ -20,6 +22,7 @@ export async function GET(req) {
     return Response.json({ data });
   }
 
+  // 🔹 GET ROLE BY EMAIL
   const { data, error } = await supabase
     .from("users")
     .select("role")
@@ -36,26 +39,40 @@ export async function GET(req) {
   });
 }
 
-/* UPDATE ROLE (ADMIN ONLY) */
-
+/* =========================
+   UPDATE ROLE (ADMIN ONLY)
+========================= */
 export async function PATCH(req) {
-  const { id, role, adminEmail } = await req.json();
+  const { id, role } = await req.json();
 
-  if (!id || !role || !adminEmail) {
+  if (!id || !role) {
     return Response.json({ error: "Missing fields" });
   }
 
-  /* CHECK ADMIN */
+  // 🔥 Lấy user thật từ auth
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
+  if (!user) {
+    return Response.json({ error: "Unauthorized" });
+  }
+
+  // 🔥 Check role người đang login
   const { data: admin } = await supabase
     .from("users")
     .select("role")
-    .eq("email", adminEmail)
+    .eq("id", user.id)
     .single();
 
   if (!admin || admin.role !== "admin") {
+    return Response.json({ error: "Permission denied" });
+  }
+
+  // ❗ Không cho sửa chính mình
+  if (user.id === id) {
     return Response.json({
-      error: "Permission denied",
+      error: "You cannot change your own role",
     });
   }
 
@@ -65,31 +82,41 @@ export async function PATCH(req) {
     return Response.json({ error: error.message });
   }
 
-  return Response.json({
-    success: true,
-  });
+  return Response.json({ success: true });
 }
 
-/* DELETE USER (ADMIN ONLY) */
-
+/* =========================
+   DELETE USER (ADMIN ONLY)
+========================= */
 export async function DELETE(req) {
-  const { id, adminEmail } = await req.json();
+  const { id } = await req.json();
 
-  if (!id || !adminEmail) {
+  if (!id) {
     return Response.json({ error: "Missing fields" });
   }
 
-  /* CHECK ADMIN */
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return Response.json({ error: "Unauthorized" });
+  }
 
   const { data: admin } = await supabase
     .from("users")
     .select("role")
-    .eq("email", adminEmail)
+    .eq("id", user.id)
     .single();
 
   if (!admin || admin.role !== "admin") {
+    return Response.json({ error: "Permission denied" });
+  }
+
+  // ❗ Không cho tự xoá
+  if (user.id === id) {
     return Response.json({
-      error: "Permission denied",
+      error: "You cannot delete yourself",
     });
   }
 
@@ -99,7 +126,5 @@ export async function DELETE(req) {
     return Response.json({ error: error.message });
   }
 
-  return Response.json({
-    success: true,
-  });
+  return Response.json({ success: true });
 }
