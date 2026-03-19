@@ -47,10 +47,17 @@ export default function Employees() {
   };
 
   const changeRole = async (id, role) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const token = session?.access_token;
+
     const res = await fetch("/api/users", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // ✅ FIX
       },
       body: JSON.stringify({ id, role }),
     });
@@ -68,10 +75,17 @@ export default function Employees() {
   const deleteUser = async (id) => {
     if (!confirm("Delete this employee?")) return;
 
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const token = session?.access_token;
+
     const res = await fetch("/api/users", {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // ✅ FIX
       },
       body: JSON.stringify({ id }),
     });
@@ -111,7 +125,7 @@ export default function Employees() {
 
           <tbody>
             {users.map((u) => {
-              const isMe = u.id === currentUser?.id; // ✅ FIX CHÍNH
+              const isMe = u.id === currentUser?.id;
 
               return (
                 <tr key={u.id} style={row}>
@@ -133,7 +147,7 @@ export default function Employees() {
                   <td>
                     <select
                       value={u.role}
-                      disabled={isMe} // ✅ disable chính mình
+                      disabled={isMe}
                       onChange={(e) => changeRole(u.id, e.target.value)}
                     >
                       <option value="admin">Admin</option>
@@ -152,7 +166,7 @@ export default function Employees() {
                         opacity: isMe ? 0.5 : 1,
                         cursor: isMe ? "not-allowed" : "pointer",
                       }}
-                      disabled={isMe} // ✅ không cho xoá mình
+                      disabled={isMe}
                       onClick={() => deleteUser(u.id)}
                     >
                       Delete
@@ -168,30 +182,17 @@ export default function Employees() {
   );
 }
 
-/* =========================
-   STYLES
-========================= */
+/* STYLES */
 
-const container = {
-  padding: 40,
-};
-
-const title = {
-  marginBottom: 20,
-};
-
+const container = { padding: 40 };
+const title = { marginBottom: 20 };
 const card = {
   background: "white",
   borderRadius: 10,
   padding: 20,
   boxShadow: "0 5px 20px rgba(0,0,0,0.05)",
 };
-
-const table = {
-  width: "100%",
-  borderCollapse: "collapse",
-};
-
+const table = { width: "100%", borderCollapse: "collapse" };
 const th = {
   textAlign: "left",
   borderBottom: "1px solid #eee",
@@ -199,18 +200,13 @@ const th = {
   fontSize: 14,
   color: "#666",
 };
-
-const row = {
-  borderBottom: "1px solid #f3f3f3",
-};
-
+const row = { borderBottom: "1px solid #f3f3f3" };
 const userCell = {
   display: "flex",
   alignItems: "center",
   gap: 12,
   padding: "12px 0",
 };
-
 const avatar = {
   width: 36,
   height: 36,
@@ -222,17 +218,8 @@ const avatar = {
   justifyContent: "center",
   fontWeight: "bold",
 };
-
-const email = {
-  fontSize: 14,
-  fontWeight: 500,
-};
-
-const date = {
-  fontSize: 13,
-  color: "#666",
-};
-
+const email = { fontSize: 14, fontWeight: 500 };
+const date = { fontSize: 13, color: "#666" };
 const deleteBtn = {
   background: "#ef4444",
   color: "white",
