@@ -5,12 +5,55 @@ export async function POST(req) {
   try {
     const { name, stock } = await req.json();
 
-    console.log("LOW STOCK DETECTED");
-    console.log("Product:", name);
-    console.log("Stock left:", stock);
+    /* ========================
+    VALIDATE INPUT
+    ======================== */
+    if (!name || stock == null) {
+      return Response.json({
+        success: false,
+        error: "Missing name or stock",
+      });
+    }
 
-    /* GET ADMIN EMAILS */
+    console.log("LOW STOCK DETECTED:", name, stock);
 
+    /* ========================
+    GET PRODUCT (CHECK SPAM)
+    ======================== */
+    const { data: product, error: productError } = await supabase
+      .from("products")
+      .select("id, last_alert_at")
+      .eq("name", name)
+      .single();
+
+    if (productError || !product) {
+      console.log("PRODUCT FETCH ERROR", productError);
+      return Response.json({
+        success: false,
+        error: "Product not found",
+      });
+    }
+
+    const now = new Date();
+    const last = product.last_alert_at ? new Date(product.last_alert_at) : null;
+
+    const ONE_HOUR = 60 * 60 * 1000;
+
+    /* ========================
+    PREVENT SPAM
+    ======================== */
+    if (last && now - last < ONE_HOUR) {
+      console.log("ALREADY ALERTED RECENTLY");
+
+      return Response.json({
+        success: true,
+        message: "Already alerted recently",
+      });
+    }
+
+    /* ========================
+    GET ADMIN EMAILS
+    ======================== */
     const { data: admins, error } = await supabase
       .from("users")
       .select("email")
@@ -26,10 +69,29 @@ export async function POST(req) {
 
     const adminEmails = admins.map((a) => a.email);
 
+    if (!adminEmails.length) {
+      return Response.json({
+        success: false,
+        error: "No admin emails found",
+      });
+    }
+
     console.log("Admins:", adminEmails);
 
-    /* MAIL TRANSPORT */
+    /* ========================
+    ALERT LEVEL
+    ======================== */
+    let level = "WARNING";
+    let color = "#f59e0b";
 
+    if (stock <= 5) {
+      level = "CRITICAL";
+      color = "#dc2626";
+    }
+
+    /* ========================
+    SEND EMAIL
+    ======================== */
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -38,10 +100,10 @@ export async function POST(req) {
       },
     });
 
-    const info = await transporter.sendMail({
+    await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: adminEmails.join(","), // gửi cho tất cả admin
-      subject: "⚠ Low Stock Alert",
+      to: adminEmails.join(","),
+      subject: `⚠ ${level} Stock Alert`,
       html: `
 <div style="font-family:Arial, sans-serif; background:#f8fafc; padding:30px">
   <div style="
@@ -52,8 +114,8 @@ export async function POST(req) {
       padding:24px;
       box-shadow:0 4px 12px rgba(0,0,0,0.08)
   ">
-    <h2 style="color:#dc2626;margin-top:0">
-      ⚠ Low Stock Alert
+    <h2 style="color:${color};margin-top:0">
+      ⚠ ${level} Stock Alert
     </h2>
 
     <p style="font-size:15px;color:#333">
@@ -99,15 +161,21 @@ export async function POST(req) {
     });
 
     console.log("EMAIL SENT SUCCESS");
-    console.log(info);
+
+    /* ========================
+    UPDATE LAST ALERT TIME
+    ======================== */
+    await supabase
+      .from("products")
+      .update({ last_alert_at: new Date() })
+      .eq("id", product.id);
 
     return Response.json({
       success: true,
-      message: "Email sent to admins",
+      message: "Email sent successfully",
     });
   } catch (err) {
-    console.log("EMAIL ERROR");
-    console.log(err);
+    console.log("EMAIL ERROR", err);
 
     return Response.json({
       success: false,

@@ -27,32 +27,25 @@ export default function CheckoutPage() {
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
   /* =========================
-     CHECKOUT (FIXED)
+     CHECKOUT WITH LOW-STOCK ALERT
   ========================= */
   const checkout = async () => {
     if (loading) return;
-
     setLoading(true);
 
     try {
-      // 🔥 LẤY USER TỪ CLIENT
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
+      // 1️⃣ Checkout API
       const res = await fetch("/api/checkout", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items,
           user: user
-            ? {
-                id: user.id,
-                email: user.email,
-                name: user.user_metadata?.name,
-              }
+            ? { id: user.id, email: user.email, name: user.user_metadata?.name }
             : null,
         }),
       });
@@ -62,9 +55,37 @@ export default function CheckoutPage() {
       if (data.success) {
         toast.success("Checkout success");
 
+        // 2️⃣ Trigger Low Stock Alert for each item
+        for (const item of items) {
+          // stock mới: lấy từ API checkout nếu có, hoặc tạm tính
+          const newStock = (item.stock ?? 0) - item.qty;
+
+          console.log(
+            "Checking low stock for",
+            item.name,
+            "New stock:",
+            newStock,
+            "Min stock:",
+            item.min_stock,
+          );
+
+          const alertRes = await fetch("/api/low-stock", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: item.name,
+              stock: newStock,
+              min_stock: item.min_stock,
+            }),
+          });
+
+          const alertData = await alertRes.json();
+          console.log("Low stock API response:", alertData);
+        }
+
+        // 3️⃣ Clear cart
         localStorage.removeItem("cart");
         setItems([]);
-
         router.push("/scan");
       } else {
         toast.error(data.error || "Checkout failed");
@@ -78,7 +99,7 @@ export default function CheckoutPage() {
   };
 
   /* =========================
-     STYLES
+     BUTTON STYLES
   ========================= */
   const btn = {
     flex: 1,
@@ -117,13 +138,7 @@ export default function CheckoutPage() {
      UI
   ========================= */
   return (
-    <div
-      style={{
-        padding: 40,
-        background: "#f8fafc",
-        minHeight: "100vh",
-      }}
-    >
+    <div style={{ padding: 40, background: "#f8fafc", minHeight: "100vh" }}>
       <div
         style={{
           maxWidth: 900,
@@ -166,13 +181,10 @@ export default function CheckoutPage() {
             {items.map((item) => (
               <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
                 <td style={{ padding: 12 }}>{item.name}</td>
-
                 <td style={{ textAlign: "center" }}>
                   {formatVND(item.price || 0)}
                 </td>
-
                 <td style={{ textAlign: "center" }}>{item.qty}</td>
-
                 <td style={{ textAlign: "center", fontWeight: "bold" }}>
                   {formatVND((item.price || 0) * item.qty)}
                 </td>
@@ -229,18 +241,14 @@ export default function CheckoutPage() {
           <div style={qrModal}>
             <div style={qrBox}>
               <h2>Scan to Pay</h2>
-
               <img
                 src={`https://img.vietqr.io/image/VCB-1018309045-compact.png?amount=${total}`}
                 width="220"
               />
-
               <p style={{ fontWeight: "bold" }}>Total: {formatVND(total)}</p>
-
               <button onClick={checkout} style={btn} disabled={loading}>
                 {loading ? "Processing..." : "✓ Confirm Payment"}
               </button>
-
               <button
                 onClick={() => setPaymentMethod(null)}
                 style={{ ...btn, background: "#94a3b8" }}
@@ -259,20 +267,15 @@ export default function CheckoutPage() {
           aspect-ratio: 1;
           border-radius: 50%;
           background: white;
-
           --_m:
             conic-gradient(#0000 10%, #000),
             linear-gradient(#000 0 0) content-box;
-
           -webkit-mask: var(--_m);
           mask: var(--_m);
-
           -webkit-mask-composite: source-out;
           mask-composite: subtract;
-
           animation: spin 1s infinite linear;
         }
-
         @keyframes spin {
           to {
             transform: rotate(1turn);
