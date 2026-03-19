@@ -19,10 +19,23 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { name } = body;
+    let { name } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Category name required" });
+    }
+
+    // Chuẩn hóa về viết thường
+    name = name.trim().toLowerCase();
+
+    // Kiểm tra trùng tên (case-insensitive)
+    const { data: existing } = await supabase
+      .from("categories")
+      .select("*")
+      .ilike("name", name);
+
+    if (existing && existing.length > 0) {
+      return NextResponse.json({ error: "Category already exists" });
     }
 
     const { data, error } = await supabase
