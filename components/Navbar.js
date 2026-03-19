@@ -64,6 +64,33 @@ export default function Navbar() {
   const name = user?.user_metadata?.full_name;
   const email = user?.email;
 
+  //sync user
+  useEffect(() => {
+    const syncUser = async () => {
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!data) {
+        const { error } = await supabase.from("users").insert({
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.full_name,
+          role: "seller",
+        });
+
+        if (error) console.error("SYNC ERROR:", error);
+        else console.log("User re-created!");
+      }
+    };
+
+    syncUser();
+  }, [user]);
+
   return (
     <div style={nav}>
       <Link href="/" style={logo}>
