@@ -86,7 +86,7 @@ const confirmBtn = {
   padding: "10px 22px",
   borderRadius: 12,
   border: "none",
-  background: "#3b82f6",
+  background: "#ef4444",
   color: "white",
   cursor: "pointer",
 };

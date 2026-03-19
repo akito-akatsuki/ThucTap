@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function Employees() {
   const [users, setUsers] = useState([]);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   useEffect(() => {
     init();
@@ -57,7 +61,7 @@ export default function Employees() {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // ✅ FIX
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ id, role }),
     });
@@ -73,8 +77,6 @@ export default function Employees() {
   };
 
   const deleteUser = async (id) => {
-    if (!confirm("Delete this employee?")) return;
-
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -85,7 +87,7 @@ export default function Employees() {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // ✅ FIX
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ id }),
     });
@@ -167,7 +169,10 @@ export default function Employees() {
                         cursor: isMe ? "not-allowed" : "pointer",
                       }}
                       disabled={isMe}
-                      onClick={() => deleteUser(u.id)}
+                      onClick={() => {
+                        setSelectedUserId(u.id);
+                        setConfirmOpen(true);
+                      }}
                     >
                       Delete
                     </button>
@@ -178,6 +183,22 @@ export default function Employees() {
           </tbody>
         </table>
       </div>
+
+      {/* 🔥 CONFIRM MODAL */}
+      {confirmOpen && (
+        <ConfirmModal
+          text="This user will be permanently deleted."
+          onCancel={() => {
+            setConfirmOpen(false);
+            setSelectedUserId(null);
+          }}
+          onConfirm={() => {
+            deleteUser(selectedUserId);
+            setConfirmOpen(false);
+            setSelectedUserId(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -185,14 +206,21 @@ export default function Employees() {
 /* STYLES */
 
 const container = { padding: 40 };
+
 const title = { marginBottom: 20 };
+
 const card = {
   background: "white",
   borderRadius: 10,
   padding: 20,
   boxShadow: "0 5px 20px rgba(0,0,0,0.05)",
 };
-const table = { width: "100%", borderCollapse: "collapse" };
+
+const table = {
+  width: "100%",
+  borderCollapse: "collapse",
+};
+
 const th = {
   textAlign: "left",
   borderBottom: "1px solid #eee",
@@ -200,13 +228,18 @@ const th = {
   fontSize: 14,
   color: "#666",
 };
-const row = { borderBottom: "1px solid #f3f3f3" };
+
+const row = {
+  borderBottom: "1px solid #f3f3f3",
+};
+
 const userCell = {
   display: "flex",
   alignItems: "center",
   gap: 12,
   padding: "12px 0",
 };
+
 const avatar = {
   width: 36,
   height: 36,
@@ -218,8 +251,17 @@ const avatar = {
   justifyContent: "center",
   fontWeight: "bold",
 };
-const email = { fontSize: 14, fontWeight: 500 };
-const date = { fontSize: 13, color: "#666" };
+
+const email = {
+  fontSize: 14,
+  fontWeight: 500,
+};
+
+const date = {
+  fontSize: 13,
+  color: "#666",
+};
+
 const deleteBtn = {
   background: "#ef4444",
   color: "white",
