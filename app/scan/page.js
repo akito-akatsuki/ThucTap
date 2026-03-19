@@ -126,7 +126,36 @@ export default function ScanPage() {
   const removeItem = (id) => {
     setCart((prev) => prev.filter((p) => p.id !== id));
   };
+  const handleInputQty = (id, value) => {
+    // cho phép rỗng để nhập lại
+    if (value === "") {
+      setCart((prev) => prev.map((p) => (p.id === id ? { ...p, qty: "" } : p)));
+      return;
+    }
 
+    let qty = Number(value);
+
+    if (isNaN(qty) || qty < 1) qty = 1;
+
+    const item = cart.find((p) => p.id === id);
+    if (!item) return;
+
+    // ❌ vượt stock
+    if (qty > item.stock) {
+      if (!alertRef.current) {
+        toast.error("Out of stock");
+        alertRef.current = true;
+
+        setTimeout(() => {
+          alertRef.current = false;
+        }, 1200);
+      }
+
+      qty = item.stock;
+    }
+
+    setCart((prev) => prev.map((p) => (p.id === id ? { ...p, qty } : p)));
+  };
   /* =========================
      TOTAL
   ========================= */
@@ -268,16 +297,24 @@ export default function ScanPage() {
                           -
                         </button>
 
-                        <span
+                        <input
+                          type="number"
+                          value={item.qty}
+                          min={1}
+                          onFocus={(e) => e.target.select()} // ✅ BÔI ĐEN TOÀN BỘ
+                          onChange={(e) =>
+                            handleInputQty(item.id, e.target.value)
+                          }
+                          onWheel={(e) => e.target.blur()} // chống scroll phá số
                           style={{
-                            minWidth: 30,
-                            display: "inline-block",
+                            width: 60,
                             textAlign: "center",
+                            border: "1px solid #ddd",
+                            borderRadius: 6,
+                            padding: "4px 6px",
                             fontWeight: "bold",
                           }}
-                        >
-                          {item.qty}
-                        </span>
+                        />
 
                         <button
                           onClick={() => increaseQty(item.id)}
