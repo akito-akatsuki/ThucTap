@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState("");
   const [newCategory, setNewCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -37,34 +38,52 @@ export default function Dashboard() {
   const colors = ["#2563eb", "#16a34a", "#dc2626", "#9333ea", "#f59e0b"];
 
   /* LOAD PRODUCTS */
-
   const loadProducts = async () => {
     const res = await fetch("/api/products");
     const json = await res.json();
-
     const list = json.data || [];
-
     setProducts(list);
-
     loadAI(list);
   };
-  /* LOAD CATEGORIES */
 
+  /* LOAD CATEGORIES */
   const loadCategories = async () => {
     const res = await fetch("/api/categories");
     const json = await res.json();
     setCategories(json.data || []);
   };
 
-  /* SHOW QR */
+  /* DELETE CATEGORY */
+  const deleteCategory = async (id) => {
+    try {
+      const res = await fetch("/api/categories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
 
+      const json = await res.json();
+
+      if (res.ok && !json.error) {
+        toast.success(json.message || "Category deleted, products are kept");
+        setSelectedCategory(""); // reset dropdown
+        loadCategories(); // reload categories
+        loadProducts();
+      } else {
+        toast.error(json.error || "Delete failed");
+      }
+    } catch (err) {
+      toast.error("Server error");
+    }
+  };
+
+  /* SHOW QR */
   const showQR = (barcode) => {
     const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${barcode}`;
     window.open(url);
   };
 
   /* LOAD AI */
-
   const loadAI = async (productList) => {
     if (!productList.length) return;
 
@@ -79,11 +98,9 @@ export default function Dashboard() {
 
       const json = await res.json();
       const ai = json.data || [];
-
       setPredictions(ai);
 
       const today = new Date();
-
       const formatted = Array.from({ length: 7 }).map((_, i) => {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
@@ -94,7 +111,6 @@ export default function Dashboard() {
         });
 
         const row = { date: label };
-
         ai.forEach((p) => {
           row[p.name] = p.prediction?.[i] ?? 0;
         });
@@ -109,18 +125,15 @@ export default function Dashboard() {
   };
 
   /* INIT */
-
   useEffect(() => {
     loadProducts();
     loadCategories();
   }, []);
 
   /* REALTIME */
-
   useEffect(() => {
     const channel = supabase
       .channel("inventory-realtime")
-
       .on(
         "postgres_changes",
         {
@@ -132,15 +145,14 @@ export default function Dashboard() {
           loadProducts();
         },
       )
-
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
-  /* GET ROLE */
 
+  /* GET ROLE */
   useEffect(() => {
     const getRole = async () => {
       const {
@@ -148,7 +160,6 @@ export default function Dashboard() {
       } = await supabase.auth.getSession();
 
       const email = session?.user?.email;
-
       if (!email) return;
 
       const res = await fetch(`/api/users?email=${email}`);
@@ -161,7 +172,6 @@ export default function Dashboard() {
   }, []);
 
   /* ADD PRODUCT */
-
   const addProduct = async () => {
     if (!name.trim()) {
       toast.error("Enter product name");
@@ -189,14 +199,12 @@ export default function Dashboard() {
 
       const res = await fetch("/api/products", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           price: Number(price),
           category_id: category || null,
-          user, // 🔥 THÊM DÒNG NÀY
+          user,
         }),
       });
 
@@ -209,13 +217,10 @@ export default function Dashboard() {
       }
 
       setQr(json.qr);
-
       setName("");
       setPrice("");
-
       toast.dismiss(loading);
       toast.success("Product added");
-
       loadProducts();
     } catch (err) {
       toast.dismiss(loading);
@@ -223,7 +228,7 @@ export default function Dashboard() {
     }
   };
 
-  /*ADD CATEGORY */
+  /* ADD CATEGORY */
   const addCategory = async () => {
     if (!newCategory.trim()) {
       toast.error("Enter category name");
@@ -232,12 +237,8 @@ export default function Dashboard() {
 
     const res = await fetch("/api/categories", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: newCategory,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newCategory }),
     });
 
     const json = await res.json();
@@ -248,45 +249,34 @@ export default function Dashboard() {
     }
 
     toast.success("Category added");
-
     setNewCategory("");
     loadCategories();
   };
-  /* DELETE */
 
+  /* DELETE PRODUCT */
   const deleteProduct = (id) => {
     setConfirmModal(id);
   };
   const confirmDelete = async () => {
     await fetch("/api/products", {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: confirmModal }),
     });
 
     toast.success("Product deleted");
-
     setConfirmModal(null);
     loadProducts();
   };
-  /* EDIT PRODUCT */
 
+  /* EDIT PRODUCT */
   const editProduct = (product) => {
-    setModal({
-      type: "edit",
-      product,
-    });
+    setModal({ type: "edit", product });
   };
 
   /* IMPORT STOCK */
-
   const importStock = (product) => {
-    setModal({
-      type: "import",
-      product,
-    });
+    setModal({ type: "import", product });
   };
 
   const totalStock = products.reduce(
@@ -306,23 +296,23 @@ export default function Dashboard() {
           <StatCard title="Total Stock" value={totalStock} />
         </div>
 
-        {/* ADD PRODUCT */}
+        {/* ADD PRODUCT & CATEGORY */}
         {role === "admin" && (
-          <Card title="Add Product">
+          <Card title="Manage Products & Categories">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 addProduct();
               }}
             >
-              <div style={{ display: "flex", gap: 10 }}>
+              {/* ADD PRODUCT */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
                 <input
                   placeholder="Product name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   style={input}
                 />
-
                 <input
                   type="number"
                   placeholder="Price"
@@ -336,7 +326,6 @@ export default function Dashboard() {
                   style={input}
                 >
                   <option value="">Category</option>
-
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -347,16 +336,46 @@ export default function Dashboard() {
                   Add
                 </button>
               </div>
-              <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
+
+              {/* ADD NEW CATEGORY */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
                 <input
                   placeholder="New category"
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
                   style={input}
                 />
-
-                <button onClick={addCategory} style={primaryBtn}>
+                <button type="button" onClick={addCategory} style={primaryBtn}>
                   Add Category
+                </button>
+              </div>
+
+              {/* DELETE CATEGORY */}
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  style={input}
+                >
+                  <option value="">Select Category to Delete</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!selectedCategory) {
+                      toast.error("Please select a category to delete");
+                      return;
+                    }
+                    deleteCategory(selectedCategory);
+                  }}
+                  style={deleteBtn}
+                >
+                  Delete
                 </button>
               </div>
             </form>
