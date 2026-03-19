@@ -29,6 +29,9 @@ export default function Dashboard() {
   const [category, setCategory] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [revenue, setRevenue] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(""); // "" = tất cả năm
+  const [selectedMonth, setSelectedMonth] = useState(""); // "" = tất cả tháng
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -128,6 +131,7 @@ export default function Dashboard() {
   useEffect(() => {
     loadProducts();
     loadCategories();
+    loadRevenue();
   }, []);
 
   /* REALTIME */
@@ -284,6 +288,27 @@ export default function Dashboard() {
     0,
   );
 
+  /* LOAD REVENUE */
+  const loadRevenue = async () => {
+    try {
+      let url = "/api/revenue";
+      const params = [];
+      if (selectedYear) params.push(`year=${selectedYear}`);
+      if (selectedMonth) params.push(`month=${selectedMonth}`);
+      if (params.length) url += "?" + params.join("&");
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const formatted = data.map((item) => ({
+        month: `${item.year}-${String(item.month).padStart(2, "0")}`,
+        total_revenue: Number(item.total_revenue),
+      }));
+      setRevenue(formatted);
+    } catch (err) {
+      console.error("Failed to load revenue", err);
+    }
+  };
   return (
     <>
       <div style={page}>
@@ -495,7 +520,73 @@ export default function Dashboard() {
             </tbody>
           </table>
         </Card>
+        <Card title="Monthly Revenue">
+          {/* Dropdown lọc */}
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              marginBottom: 10,
+              alignItems: "center",
+            }}
+          >
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              style={input}
+            >
+              <option value="">All Years</option>
+              {[2024, 2025, 2026].map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
 
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              style={input}
+            >
+              <option value="">All Months</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+
+            <button onClick={loadRevenue} style={primaryBtn}>
+              Filter
+            </button>
+          </div>
+
+          {/* Bảng doanh thu */}
+          <table style={table}>
+            <thead>
+              <tr>
+                <th style={th}>Month</th>
+                <th style={th}>Total Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              {revenue.length > 0 ? (
+                revenue.map((r, i) => (
+                  <tr key={i}>
+                    <td style={td}>{r.month}</td>
+                    <td style={td}>{formatVND(r.total_revenue)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td style={td} colSpan={2}>
+                    No data
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </Card>
         {/* AI TABLE */}
 
         <Card title="AI Prediction Insights">
