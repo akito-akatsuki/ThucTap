@@ -59,10 +59,14 @@ export default function StockLogsPage() {
     const keyword = search.toLowerCase();
 
     return (
+      // 🔍 invoice
       (order.invoice_id || "").toLowerCase().includes(keyword) ||
+      // 🔍 product name
       order.items.some((i) =>
         (i.products?.name || "").toLowerCase().includes(keyword),
-      )
+      ) ||
+      // 🔍 user display name / email
+      (order.user || "").toLowerCase().includes(keyword)
     );
   });
 
