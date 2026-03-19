@@ -29,7 +29,9 @@ export default function StockLogsPage() {
      SORT
   ========================= */
   const sortedLogs = [...logs].sort(
-    (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0),
+    (a, b) =>
+      new Date(b.created_at || 0).getTime() -
+      new Date(a.created_at || 0).getTime(),
   );
 
   /* =========================
@@ -44,7 +46,7 @@ export default function StockLogsPage() {
         created_at: log.created_at,
         user: log.created_by || "POS",
         items: [],
-        type: log.type, // 👈 LẤY TYPE NGAY TỪ LOG ĐẦU TIÊN
+        type: log.type,
       };
     }
 
@@ -55,17 +57,19 @@ export default function StockLogsPage() {
   /* =========================
      FILTER
   ========================= */
+  const keyword = search.toLowerCase().trim();
+
   const filtered = Object.values(grouped).filter((order) => {
-    const keyword = search.toLowerCase();
+    if (!keyword) return true;
 
     return (
-      // 🔍 invoice
+      // invoice
       (order.invoice_id || "").toLowerCase().includes(keyword) ||
-      // 🔍 product name
+      // product
       order.items.some((i) =>
         (i.products?.name || "").toLowerCase().includes(keyword),
       ) ||
-      // 🔍 user display name / email
+      // user (email + name)
       (order.user || "").toLowerCase().includes(keyword)
     );
   });
@@ -77,7 +81,7 @@ export default function StockLogsPage() {
       {/* SEARCH */}
       <input
         style={input}
-        placeholder="Search product or invoice..."
+        placeholder="Search product / invoice / user..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
@@ -100,7 +104,6 @@ export default function StockLogsPage() {
           ? new Date(order.created_at).toLocaleString()
           : "No date";
 
-        // ✅ LOGIC ĐƠN GIẢN: chỉ cần check type
         const isExport = order.type === "export";
 
         return (
@@ -203,7 +206,7 @@ const input = {
   padding: 10,
   marginBottom: 20,
   width: "100%",
-  maxWidth: 300,
+  maxWidth: 320,
   borderRadius: 8,
   border: "1px solid #ddd",
 };

@@ -27,12 +27,28 @@ export async function POST(req) {
     const username = `${email} (${name})`;
 
     /* =========================
-       🔥 CREATE INVOICE (QUAN TRỌNG)
+       🔥 GET PRODUCT PRICE
+    ========================= */
+    const { data: product, error: productError } = await supabase
+      .from("products")
+      .select("price")
+      .eq("id", product_id)
+      .single();
+
+    if (productError || !product) {
+      return Response.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    const price = product.price || 0;
+    const total = price * Number(quantity);
+
+    /* =========================
+       🔥 CREATE INVOICE
     ========================= */
     const { data: invoice, error: invoiceError } = await supabase
       .from("invoices")
       .insert({
-        total: 0, // import không cần total
+        total, // 🔥 giờ có total luôn
         created_name: username,
       })
       .select()
@@ -51,8 +67,9 @@ export async function POST(req) {
         product_id,
         type: "import",
         quantity: Number(quantity),
+        price, // 🔥 FIX QUAN TRỌNG
         created_by: username,
-        invoice_id: invoice.id, // ✅ FIX QUAN TRỌNG
+        invoice_id: invoice.id,
       });
 
     if (movementError) {
@@ -65,7 +82,8 @@ export async function POST(req) {
     return Response.json({
       success: true,
       invoice_id: invoice.id,
-      created_by: username,
+      total,
+      price,
     });
   } catch (err) {
     console.log("IMPORT API ERROR:", err);
