@@ -16,7 +16,7 @@ import AIBot from "@/components/AIBot";
 import { formatVND } from "./utils/currency";
 
 /* =========================
-   TYPES (fix TS sạch)
+   TYPES
 ========================= */
 type Log = {
   id: string;
@@ -35,6 +35,8 @@ export default function Home() {
   const [chartData, setChartData] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
 
   const colors = [
     "#2563eb",
@@ -46,16 +48,35 @@ export default function Home() {
   ];
 
   useEffect(() => {
+    loadCategories();
     loadData();
     loadLogs();
-  }, []);
+  }, [selectedCategory]);
+
+  const loadCategories = async () => {
+    try {
+      const res = await fetch("/api/categories");
+      const json = await res.json();
+      setCategories(json.data || []);
+    } catch (err) {
+      console.error("CATEGORY ERROR:", err);
+    }
+  };
 
   const loadData = async () => {
     try {
       const productRes = await fetch("/api/products");
       const productJson = await productRes.json();
 
-      const productList = productJson.data || [];
+      let productList = productJson.data || [];
+
+      // lọc theo category nếu có chọn
+      if (selectedCategory) {
+        productList = productList.filter(
+          (p: any) => p.category_id === selectedCategory,
+        );
+      }
+
       setProducts(productList);
 
       if (productList.length === 0) return;
@@ -114,6 +135,23 @@ export default function Home() {
       <div className="max-w-6xl mx-auto space-y-8">
         <h1 className="text-3xl font-bold">Inventory AI</h1>
 
+        {/* CATEGORY FILTER */}
+        <div className="mb-4">
+          <label className="mr-2 font-semibold">Category:</label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="border px-2 py-1 rounded"
+          >
+            <option value="">All Categories</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* CHART */}
         <div className="bg-white shadow rounded-xl p-6">
           <h2 className="text-xl font-semibold mb-4">
@@ -143,9 +181,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* =========================
-            STOCK LOG (FIXED)
-        ========================= */}
+        {/* STOCK LOG */}
         <div className="bg-white shadow rounded-xl p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Stock Movement Logs</h2>
