@@ -18,6 +18,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 import { formatVND } from "../utils/currency";
+import MonthlyChart from "@/components/Monthlychart";
 
 export default function Dashboard() {
   const [products, setProducts] = useState([]);
@@ -933,7 +934,7 @@ export default function Dashboard() {
               style={{ overflow: "visible" }}
             >
               <LineChart
-                data={chart.slice(0, 7)} // ✅ luôn 7 ngày
+                data={chart.slice(0, 7)} // ✅ always 7 days
                 margin={{ top: 20, right: 20, left: 0, bottom: 60 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />

@@ -12,22 +12,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import AIBot from "@/components/AIBot";
-import { formatVND } from "./utils/currency";
 
 /* =========================
    TYPES
 ========================= */
-type Category = {
-  id: string;
-  name: string;
-};
-
-type Product = {
-  id: string;
-  name: string;
-  category_id: string;
-};
-
+type Category = { id: string; name: string };
+type Product = { id: string; name: string; category_id: string };
 type Log = {
   id: string;
   invoice_id?: string;
@@ -106,8 +96,6 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
 
-  const [mode, setMode] = useState<"week" | "month">("week");
-
   const colors = [
     "#2563eb",
     "#16a34a",
@@ -146,6 +134,9 @@ export default function Home() {
     return allProducts.filter((p) => p.category_id === selectedCategory);
   }, [allProducts, selectedCategory]);
 
+  /* =========================
+     CHART DATA - MONTH ONLY
+  ========================= */
   useEffect(() => {
     if (!products.length) {
       setChartData([]);
@@ -156,14 +147,14 @@ export default function Home() {
       const aiRes = await fetch("/api/ai/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ products, mode }),
+        body: JSON.stringify({ products, mode: "month" }), // luôn month
       });
 
       const aiJson = await aiRes.json();
       const ai = aiJson.data || [];
 
       const today = new Date();
-      const days = mode === "week" ? 7 : 30;
+      const days = 30;
 
       const formatted = Array.from({ length: days }).map((_, i) => {
         const d = new Date(today);
@@ -174,10 +165,10 @@ export default function Home() {
           day: "numeric",
         });
 
-        const row: any = { date: label };
+        const row: Record<string, number | string> = { date: label };
 
         ai.forEach((p: any) => {
-          row[p.id] = p.prediction?.[i] ?? 0;
+          row[p.name] = p.prediction?.[i] ?? 0; // số lượng SP
         });
 
         return row;
@@ -187,7 +178,7 @@ export default function Home() {
     };
 
     loadAI();
-  }, [products, mode]);
+  }, [products]);
 
   const groupedLogs = useMemo(() => {
     const grouped = logs.reduce<Record<string, any>>((acc, log) => {
@@ -216,6 +207,9 @@ export default function Home() {
       .slice(0, 3);
   }, [logs]);
 
+  /* =========================
+     RENDER
+  ========================= */
   return (
     <main className="min-h-screen bg-gray-100 p-4 md:p-10">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -230,36 +224,12 @@ export default function Home() {
             value={selectedCategory}
             onChange={setSelectedCategory}
           />
-
-          <div className="flex border rounded overflow-hidden w-full md:w-auto">
-            <button
-              onClick={() => setMode("week")}
-              className={`flex-1 md:flex-none px-4 py-2 text-sm ${
-                mode === "week"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-600"
-              }`}
-            >
-              Week
-            </button>
-
-            <button
-              onClick={() => setMode("month")}
-              className={`flex-1 md:flex-none px-4 py-2 text-sm ${
-                mode === "month"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-600"
-              }`}
-            >
-              Month
-            </button>
-          </div>
         </div>
 
         {/* CHART */}
         <div className="bg-white shadow rounded-xl p-4 md:p-6">
           <h2 className="text-lg md:text-xl font-semibold mb-4 text-gray-800">
-            AI Sales Prediction ({mode === "week" ? "7 Days" : "30 Days"})
+            AI Sales Prediction (30 Days)
           </h2>
 
           <div className="w-full h-64 md:h-80 min-w-0">
@@ -276,12 +246,13 @@ export default function Home() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" minTickGap={20} />
                   <YAxis width={30} />
-                  <Tooltip formatter={(v) => formatVND(Number(v))} />
-
+                  <Tooltip
+                    formatter={(v) => `${v} SP`} // hiển thị SP
+                  />
                   {products.map((p, index) => (
                     <Line
                       key={p.id}
-                      dataKey={p.id}
+                      dataKey={p.name}
                       stroke={colors[index % colors.length]}
                       strokeWidth={2}
                       dot={false}
@@ -292,7 +263,7 @@ export default function Home() {
             )}
           </div>
 
-          {/* 🔥 CUSTOM LEGEND */}
+          {/* CUSTOM LEGEND */}
           <div className="flex flex-wrap gap-2 mt-4">
             {products.map((p, index) => (
               <div
@@ -308,7 +279,6 @@ export default function Home() {
                     flexShrink: 0,
                   }}
                 />
-
                 <span className="truncate" title={p.name}>
                   {p.name}
                 </span>
@@ -334,21 +304,13 @@ export default function Home() {
 
           {groupedLogs.length === 0 && <p>No logs</p>}
 
-          {groupedLogs.map((order: any) => {
-            const total = order.items.reduce(
-              (sum: number, i: Log) => sum + i.quantity * (i.price || 0),
-              0,
-            );
-
-            return (
-              <DashboardLogItem
-                key={order.invoice_id}
-                order={order}
-                shortId={order.invoice_id?.slice(0, 8)}
-                total={total}
-              />
-            );
-          })}
+          {groupedLogs.map((order: any) => (
+            <DashboardLogItem
+              key={order.invoice_id}
+              order={order}
+              shortId={order.invoice_id?.slice(0, 8)}
+            />
+          ))}
         </div>
       </div>
 
@@ -360,7 +322,7 @@ export default function Home() {
 /* =========================
    LOG ITEM
 ========================= */
-function DashboardLogItem({ order, shortId, total }: any) {
+function DashboardLogItem({ order, shortId }: any) {
   const [open, setOpen] = useState(false);
   const isExport = order.type === "export";
 
@@ -382,8 +344,6 @@ function DashboardLogItem({ order, shortId, total }: any) {
           </h3>
           <p className="text-xs text-gray-500">👤 {order.user}</p>
         </div>
-
-        <div className="font-bold text-green-600">{formatVND(total)}</div>
       </div>
 
       {open && (
@@ -393,7 +353,9 @@ function DashboardLogItem({ order, shortId, total }: any) {
               <span>{i.products?.name || "Unknown"}</span>
               <span>{i.type}</span>
               <span>x{i.quantity}</span>
-              <span className="text-right">{formatVND(i.price || 0)}</span>
+              <span className="text-right">
+                {i.price ? `${i.price} SP` : ""}
+              </span>
             </div>
           ))}
         </div>
