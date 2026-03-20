@@ -22,7 +22,6 @@ export default function Employees() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-
     if (!session) return;
 
     const email = session.user.email;
@@ -38,14 +37,12 @@ export default function Employees() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-
     setCurrentUser(user);
   };
 
   const loadUsers = async () => {
     const res = await fetch("/api/users");
     const json = await res.json();
-
     setUsers(json.data || []);
     setLoading(false);
   };
@@ -54,7 +51,6 @@ export default function Employees() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-
     const token = session?.access_token;
 
     const res = await fetch("/api/users", {
@@ -80,7 +76,6 @@ export default function Employees() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-
     const token = session?.access_token;
 
     const res = await fetch("/api/users", {
@@ -114,77 +109,140 @@ export default function Employees() {
     <div style={container}>
       <h2 style={title}>👨‍💼 Employee Management</h2>
 
+      {/* =========================
+   EMPLOYEES TABLE / CARD VIEW
+========================= */}
       <div style={card}>
-        <table style={table}>
-          <thead>
-            <tr>
-              <th style={th}>User</th>
-              <th style={th}>Role</th>
-              <th style={th}>Created</th>
-              <th style={th}></th>
-            </tr>
-          </thead>
+        <div className="hidden md:block">
+          {/* Desktop Table */}
+          <table style={table}>
+            <thead>
+              <tr>
+                <th style={th}>User</th>
+                <th style={th}>Role</th>
+                <th style={th}>Created</th>
+                <th style={th}></th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {users.map((u) => {
-              const isMe = u.id === currentUser?.id;
-
-              return (
-                <tr key={u.id} style={row}>
-                  <td style={userCell}>
-                    <div style={avatar}>{u.email?.charAt(0).toUpperCase()}</div>
-
-                    <div>
-                      <div style={email}>
-                        {u.email}
-                        {isMe && (
-                          <span style={{ color: "red", marginLeft: 6 }}>
-                            (You)
-                          </span>
-                        )}
+            <tbody>
+              {users.map((u) => {
+                const isMe = u.id === currentUser?.id;
+                return (
+                  <tr key={u.id} style={row}>
+                    <td style={userCell}>
+                      <div style={avatar}>
+                        {u.email?.charAt(0).toUpperCase()}
                       </div>
-                    </div>
-                  </td>
+                      <div
+                        style={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                      >
+                        <div style={email}>
+                          {u.email}{" "}
+                          {isMe && (
+                            <span style={{ color: "red", marginLeft: 6 }}>
+                              (You)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
 
-                  <td>
+                    <td>
+                      <select
+                        value={u.role}
+                        disabled={isMe}
+                        onChange={(e) => changeRole(u.id, e.target.value)}
+                        style={selectStyle}
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="seller">Seller</option>
+                      </select>
+                    </td>
+
+                    <td style={date}>
+                      {new Date(u.created_at).toLocaleDateString()}
+                    </td>
+
+                    <td>
+                      <button
+                        style={{
+                          ...deleteBtn,
+                          opacity: isMe ? 0.5 : 1,
+                          cursor: isMe ? "not-allowed" : "pointer",
+                        }}
+                        disabled={isMe}
+                        onClick={() => {
+                          setSelectedUserId(u.id);
+                          setConfirmOpen(true);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden flex flex-col gap-4">
+          {users.map((u) => {
+            const isMe = u.id === currentUser?.id;
+            return (
+              <div
+                key={u.id}
+                className="bg-gray-50 p-4 rounded-lg shadow-sm flex flex-col gap-2"
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div style={avatar}>{u.email?.charAt(0).toUpperCase()}</div>
+                    <div className="text-sm font-medium truncate">
+                      {u.email}{" "}
+                      {isMe && <span className="text-red-500 ml-1">(You)</span>}
+                    </div>
+                  </div>
+
+                  <button
+                    style={{
+                      ...deleteBtn,
+                      opacity: isMe ? 0.5 : 1,
+                      cursor: isMe ? "not-allowed" : "pointer",
+                    }}
+                    disabled={isMe}
+                    onClick={() => {
+                      setSelectedUserId(u.id);
+                      setConfirmOpen(true);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-1 text-sm">
+                  <div>
+                    Role:{" "}
                     <select
                       value={u.role}
                       disabled={isMe}
                       onChange={(e) => changeRole(u.id, e.target.value)}
+                      style={selectStyle}
                     >
                       <option value="admin">Admin</option>
                       <option value="seller">Seller</option>
                     </select>
-                  </td>
-
-                  <td style={date}>
-                    {new Date(u.created_at).toLocaleDateString()}
-                  </td>
-
-                  <td>
-                    <button
-                      style={{
-                        ...deleteBtn,
-                        opacity: isMe ? 0.5 : 1,
-                        cursor: isMe ? "not-allowed" : "pointer",
-                      }}
-                      disabled={isMe}
-                      onClick={() => {
-                        setSelectedUserId(u.id);
-                        setConfirmOpen(true);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  </div>
+                  <div>
+                    Created: {new Date(u.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-
-      {/* 🔥 CONFIRM MODAL */}
       {confirmOpen && (
         <ConfirmModal
           text="This user will be permanently deleted."
@@ -204,23 +262,23 @@ export default function Employees() {
 }
 
 /* STYLES */
-
-const container = { padding: 40 };
-
-const title = { marginBottom: 20 };
-
+const container = { padding: 20 };
+const title = { marginBottom: 20, fontSize: 20 };
 const card = {
   background: "white",
   borderRadius: 10,
-  padding: 20,
+  padding: 15,
   boxShadow: "0 5px 20px rgba(0,0,0,0.05)",
 };
-
+const tableWrapper = {
+  overflowX: "auto",
+  WebkitOverflowScrolling: "touch",
+};
 const table = {
   width: "100%",
+  minWidth: 600,
   borderCollapse: "collapse",
 };
-
 const th = {
   textAlign: "left",
   borderBottom: "1px solid #eee",
@@ -228,18 +286,16 @@ const th = {
   fontSize: 14,
   color: "#666",
 };
-
 const row = {
   borderBottom: "1px solid #f3f3f3",
 };
-
 const userCell = {
   display: "flex",
   alignItems: "center",
-  gap: 12,
-  padding: "12px 0",
+  gap: 10,
+  padding: "10px 0",
+  minWidth: 120,
 };
-
 const avatar = {
   width: 36,
   height: 36,
@@ -250,18 +306,25 @@ const avatar = {
   alignItems: "center",
   justifyContent: "center",
   fontWeight: "bold",
+  flexShrink: 0,
 };
-
 const email = {
   fontSize: 14,
   fontWeight: 500,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
 };
-
+const selectStyle = {
+  padding: "4px 6px",
+  borderRadius: 4,
+  fontSize: 14,
+  minWidth: 90,
+};
 const date = {
   fontSize: 13,
   color: "#666",
 };
-
 const deleteBtn = {
   background: "#ef4444",
   color: "white",
