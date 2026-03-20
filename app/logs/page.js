@@ -7,6 +7,27 @@ export default function StockLogsPage() {
   const [logs, setLogs] = useState([]);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState({});
+  const [isDark, setIsDark] = useState(false);
+
+  /* =========================
+     DETECT DARK MODE
+  ========================= */
+  useEffect(() => {
+    const checkDark = () => document.documentElement.classList.contains("dark");
+
+    setIsDark(checkDark());
+
+    const observer = new MutationObserver(() => {
+      setIsDark(checkDark());
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   /* =========================
      LOAD LOGS
@@ -63,24 +84,21 @@ export default function StockLogsPage() {
     if (!keyword) return true;
 
     return (
-      // invoice
       (order.invoice_id || "").toLowerCase().includes(keyword) ||
-      // product
       order.items.some((i) =>
         (i.products?.name || "").toLowerCase().includes(keyword),
       ) ||
-      // user (email + name)
       (order.user || "").toLowerCase().includes(keyword)
     );
   });
 
   return (
-    <div style={page}>
-      <h1 style={title}>📦 Stock Movement Logs</h1>
+    <div style={getPageStyle(isDark)}>
+      <h1 style={getTitleStyle(isDark)}>📦 Stock Movement Logs</h1>
 
       {/* SEARCH */}
       <input
-        style={input}
+        style={getInputStyle(isDark)}
         placeholder="Search product / invoice / user..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
@@ -107,7 +125,7 @@ export default function StockLogsPage() {
         const isExport = order.type === "export";
 
         return (
-          <div key={order.invoice_id} style={card}>
+          <div key={order.invoice_id} style={getCardStyle(isDark)}>
             {/* HEADER */}
             <div
               style={header}
@@ -119,14 +137,7 @@ export default function StockLogsPage() {
               }
             >
               <div>
-                <h3
-                  style={{
-                    margin: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
+                <h3 style={titleRow}>
                   <span
                     style={{
                       background: isExport ? "#ef4444" : "#22c55e",
@@ -145,27 +156,18 @@ export default function StockLogsPage() {
                   </span>
                 </h3>
 
-                <p style={meta}>👤 {order.user}</p>
-                <p style={meta}>🕒 {date}</p>
+                <p style={getMetaStyle(isDark)}>👤 {order.user}</p>
+                <p style={getMetaStyle(isDark)}>🕒 {date}</p>
               </div>
 
-              <div style={totalStyle}>💰 {formatVND(total)}</div>
+              <div style={getTotalStyle(isDark)}>💰 {formatVND(total)}</div>
             </div>
 
             {/* DROPDOWN */}
             {isOpen && (
-              <div style={dropdown}>
+              <div style={getDropdownStyle(isDark)}>
                 {order.items.map((i) => (
-                  <div
-                    key={i.id}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "2fr 1fr 1fr 1fr",
-                      gap: "10px",
-                      padding: "6px 0",
-                      alignItems: "center",
-                    }}
-                  >
+                  <div key={i.id} style={row}>
                     <span>{i.products?.name || "Unknown"}</span>
 
                     <span>
@@ -189,35 +191,38 @@ export default function StockLogsPage() {
 }
 
 /* =========================
-   STYLES
+   STYLES (DARK MODE SUPPORT)
 ========================= */
 
-const page = {
+const getPageStyle = (dark) => ({
   padding: 40,
-  background: "#f8fafc",
   minHeight: "100vh",
-};
+  background: dark ? "#020617" : "#f8fafc",
+  color: dark ? "#e2e8f0" : "#0f172a",
+});
 
-const title = {
+const getTitleStyle = (dark) => ({
   marginBottom: 20,
-};
+});
 
-const input = {
+const getInputStyle = (dark) => ({
   padding: 10,
   marginBottom: 20,
   width: "100%",
   maxWidth: 320,
   borderRadius: 8,
-  border: "1px solid #ddd",
-};
+  border: "1px solid " + (dark ? "#334155" : "#ddd"),
+  background: dark ? "#1e293b" : "white",
+  color: dark ? "white" : "black",
+});
 
-const card = {
-  background: "white",
+const getCardStyle = (dark) => ({
+  background: dark ? "#1e293b" : "white",
   padding: 20,
   borderRadius: 12,
   marginBottom: 15,
-  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-};
+  boxShadow: dark ? "0 2px 8px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.05)",
+});
 
 const header = {
   display: "flex",
@@ -225,19 +230,34 @@ const header = {
   cursor: "pointer",
 };
 
-const meta = {
+const titleRow = {
+  margin: 0,
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+};
+
+const getMetaStyle = (dark) => ({
   fontSize: 12,
-  color: "#666",
+  color: dark ? "#94a3b8" : "#666",
   margin: "2px 0",
-};
+});
 
-const dropdown = {
+const getDropdownStyle = (dark) => ({
   marginTop: 10,
-  borderTop: "1px solid #eee",
+  borderTop: "1px solid " + (dark ? "#334155" : "#eee"),
   paddingTop: 10,
+});
+
+const row = {
+  display: "grid",
+  gridTemplateColumns: "2fr 1fr 1fr 1fr",
+  gap: "10px",
+  padding: "6px 0",
+  alignItems: "center",
 };
 
-const totalStyle = {
+const getTotalStyle = (dark) => ({
   fontWeight: "bold",
-  color: "#16a34a",
-};
+  color: dark ? "#4ade80" : "#16a34a",
+});

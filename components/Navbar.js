@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase";
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const pathname = usePathname();
   const navRef = useRef(null);
@@ -18,7 +20,21 @@ export default function Navbar() {
   });
 
   /* =========================
-     AUTH LISTENER
+     DETECT MOBILE
+  ========================= */
+  useEffect(() => {
+    const check = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    check();
+    window.addEventListener("resize", check);
+
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  /* =========================
+     AUTH
   ========================= */
   useEffect(() => {
     const init = async () => {
@@ -37,28 +53,21 @@ export default function Navbar() {
       setUser(session?.user ?? null);
     });
 
-    return () => {
-      subscription?.unsubscribe(); // ✅ FIX crash
-    };
+    return () => subscription?.unsubscribe();
   }, []);
 
   /* =========================
-     GET ROLE
+     ROLE
   ========================= */
   useEffect(() => {
     const getRole = async () => {
-      if (!user) {
-        setRole(null);
-        return;
-      }
+      if (!user) return setRole(null);
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("users")
         .select("role")
         .eq("id", user.id)
         .maybeSingle();
-
-      if (error) console.error(error);
 
       setRole(data?.role ?? null);
     };
@@ -67,38 +76,11 @@ export default function Navbar() {
   }, [user]);
 
   /* =========================
-     SYNC USER (AUTO RE-CREATE)
+     UNDERLINE
   ========================= */
   useEffect(() => {
-    const syncUser = async () => {
-      if (!user) return;
+    if (isMobile) return;
 
-      const { data } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (!data) {
-        const { error } = await supabase.from("users").insert({
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.full_name,
-          role: "seller",
-        });
-
-        if (error) console.error("SYNC ERROR:", error);
-        else console.log("User re-created!");
-      }
-    };
-
-    syncUser();
-  }, [user]);
-
-  /* =========================
-     UPDATE UNDERLINE
-  ========================= */
-  useEffect(() => {
     const activeEl = navRef.current?.querySelector('[data-active="true"]');
 
     if (activeEl) {
@@ -107,7 +89,38 @@ export default function Navbar() {
         width: activeEl.offsetWidth,
       });
     }
-  }, [pathname, role]);
+  }, [pathname, role, isMobile]);
+
+  /* =========================
+     CLICK OUTSIDE (🔥 FIX)
+  ========================= */
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!navRef.current) return;
+
+      if (!navRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  /* =========================
+     ESC TO CLOSE (🔥 BONUS)
+  ========================= */
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, []);
 
   /* =========================
      AUTH ACTIONS
@@ -131,7 +144,8 @@ export default function Navbar() {
      USER INFO
   ========================= */
   const avatar =
-    user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
+    user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+
   const name = user?.user_metadata?.full_name;
   const email = user?.email;
 
@@ -146,25 +160,41 @@ export default function Navbar() {
   ];
 
   return (
-    <div style={nav}>
+    <div ref={navRef} style={nav}>
+      {/* LOGO */}
       <Link href="/" style={logo}>
         🤖 Inventory AI
       </Link>
 
-      <div style={menu} ref={navRef}>
-        {/* 🔥 SLIDE UNDERLINE */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            height: 3,
-            background: "#2563eb",
-            borderRadius: 2,
-            transition: "all 0.3s ease",
-            left: underline.left,
-            width: underline.width,
-          }}
-        />
+      {/* ☰ MOBILE */}
+      {isMobile && (
+        <button onClick={() => setOpen(!open)} style={hamburger}>
+          ☰
+        </button>
+      )}
+
+      {/* MENU */}
+      <div
+        style={{
+          ...menu,
+          ...(isMobile ? (open ? mobileMenu : { display: "none" }) : {}),
+        }}
+      >
+        {/* underline desktop */}
+        {!isMobile && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              height: 3,
+              background: "#2563eb",
+              borderRadius: 2,
+              transition: "all 0.3s",
+              left: underline.left,
+              width: underline.width,
+            }}
+          />
+        )}
 
         {/* NAV LINKS */}
         {navItems.map((item) => {
@@ -177,8 +207,9 @@ export default function Navbar() {
               data-active={isActive}
               style={{
                 ...link,
-                color: isActive ? "#2563eb" : "#333",
+                color: isActive ? "#2563eb" : "var(--text)",
               }}
+              onClick={() => setOpen(false)}
             >
               {item.label}
             </Link>
@@ -188,7 +219,7 @@ export default function Navbar() {
         {/* USER */}
         {!user ? (
           <button onClick={login} style={loginBtn}>
-            Login Google
+            Login
           </button>
         ) : (
           <div style={userBox}>
@@ -222,9 +253,9 @@ export default function Navbar() {
 const nav = {
   position: "sticky",
   top: 0,
-  background: "white",
-  borderBottom: "1px solid #eee",
-  padding: "12px 40px",
+  background: "var(--card)",
+  borderBottom: "1px solid var(--border)",
+  padding: "12px 20px",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
@@ -240,27 +271,43 @@ const logo = {
   fontWeight: "bold",
 };
 
+const hamburger = {
+  fontSize: 24,
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+};
+
 const menu = {
   display: "flex",
   gap: 20,
   alignItems: "center",
-  position: "relative", // 🔥 quan trọng cho underline
+  position: "relative",
+};
+
+const mobileMenu = {
+  position: "absolute",
+  top: 60,
+  right: 10,
+  flexDirection: "column",
+  background: "var(--card)",
+  padding: 15,
+  borderRadius: 10,
+  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+  alignItems: "flex-start",
 };
 
 const link = {
   textDecoration: "none",
   fontWeight: 500,
-  paddingBottom: 6,
-  position: "relative",
 };
 
 const loginBtn = {
   background: "#2563eb",
   color: "white",
   border: "none",
-  padding: "8px 14px",
-  borderRadius: 8,
-  cursor: "pointer",
+  padding: "6px 12px",
+  borderRadius: 6,
 };
 
 const logoutBtn = {
@@ -268,47 +315,43 @@ const logoutBtn = {
   color: "white",
   border: "none",
   padding: "6px 12px",
-  borderRadius: 8,
-  cursor: "pointer",
+  borderRadius: 6,
 };
 
 const userBox = {
   display: "flex",
   alignItems: "center",
-  gap: 10,
+  gap: 8,
 };
 
 const avatarStyle = {
-  width: 32,
-  height: 32,
+  width: 28,
+  height: 28,
   borderRadius: "50%",
 };
 
 const avatarFallback = {
-  width: 32,
-  height: 32,
+  width: 28,
+  height: 28,
   borderRadius: "50%",
   background: "#6366f1",
   color: "white",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontWeight: "bold",
 };
 
 const nameStyle = {
-  fontSize: 13,
-  fontWeight: 600,
+  fontSize: 12,
 };
 
 const emailStyle = {
-  fontSize: 11,
-  color: "#666",
+  fontSize: 10,
+  color: "#888",
 };
 
 const roleStyle = {
-  marginLeft: 6,
-  fontSize: 12,
+  marginLeft: 4,
+  fontSize: 11,
   color: "#888",
-  fontWeight: "normal",
 };

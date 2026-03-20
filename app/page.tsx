@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   LineChart,
@@ -10,7 +10,6 @@ import {
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import AIBot from "@/components/AIBot";
 import { formatVND } from "./utils/currency";
@@ -18,6 +17,17 @@ import { formatVND } from "./utils/currency";
 /* =========================
    TYPES
 ========================= */
+type Category = {
+  id: string;
+  name: string;
+};
+
+type Product = {
+  id: string;
+  name: string;
+  category_id: string;
+};
+
 type Log = {
   id: string;
   invoice_id?: string;
@@ -29,16 +39,73 @@ type Log = {
   products?: { name?: string };
 };
 
+/* =========================
+   DROPDOWN
+========================= */
+function CategoryDropdown({
+  categories,
+  value,
+  onChange,
+}: {
+  categories: Category[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = categories.find((c) => c.id === value);
+
+  return (
+    <div className="relative w-full md:w-[200px]">
+      <div
+        onClick={() => setOpen(!open)}
+        className="border px-3 py-2 rounded cursor-pointer bg-white text-black"
+      >
+        {selected?.name || "All Categories"}
+      </div>
+
+      <div
+        className={`absolute left-0 right-0 mt-1 bg-white border rounded shadow transition-all duration-200 origin-top z-50 ${
+          open
+            ? "opacity-100 scale-y-100"
+            : "opacity-0 scale-y-0 pointer-events-none"
+        }`}
+      >
+        <div
+          onClick={() => {
+            onChange("");
+            setOpen(false);
+          }}
+          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+        >
+          All Categories
+        </div>
+
+        {categories.map((c) => (
+          <div
+            key={c.id}
+            onClick={() => {
+              onChange(c.id);
+              setOpen(false);
+            }}
+            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+          >
+            {c.name}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
 
   const [chartData, setChartData] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
 
-  // 🔥 NEW
   const [mode, setMode] = useState<"week" | "month">("week");
 
   const colors = [
@@ -52,46 +119,44 @@ export default function Home() {
 
   useEffect(() => {
     loadCategories();
-    loadData();
+    loadProducts();
     loadLogs();
-  }, [selectedCategory, mode]);
+  }, []);
 
   const loadCategories = async () => {
-    try {
-      const res = await fetch("/api/categories");
-      const json = await res.json();
-      setCategories(json.data || []);
-    } catch (err) {
-      console.error("CATEGORY ERROR:", err);
-    }
+    const res = await fetch("/api/categories");
+    const json = await res.json();
+    setCategories(json.data || []);
   };
 
-  const loadData = async () => {
-    try {
-      const productRes = await fetch("/api/products");
-      const productJson = await productRes.json();
+  const loadProducts = async () => {
+    const res = await fetch("/api/products");
+    const json = await res.json();
+    setAllProducts(json.data || []);
+  };
 
-      let productList = productJson.data || [];
+  const loadLogs = async () => {
+    const res = await fetch("/api/log");
+    const json = await res.json();
+    setLogs(json.data || []);
+  };
 
-      if (selectedCategory) {
-        productList = productList.filter(
-          (p: any) => p.category_id === selectedCategory,
-        );
-      }
+  const products = useMemo(() => {
+    if (!selectedCategory) return allProducts;
+    return allProducts.filter((p) => p.category_id === selectedCategory);
+  }, [allProducts, selectedCategory]);
 
-      setProducts(productList);
+  useEffect(() => {
+    if (!products.length) {
+      setChartData([]);
+      return;
+    }
 
-      if (productList.length === 0) return;
-
+    const loadAI = async () => {
       const aiRes = await fetch("/api/ai/predict", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          products: productList,
-          mode,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ products, mode }),
       });
 
       const aiJson = await aiRes.json();
@@ -112,57 +177,64 @@ export default function Home() {
         const row: any = { date: label };
 
         ai.forEach((p: any) => {
-          row[p.name] = p.prediction?.[i] ?? 0;
+          row[p.id] = p.prediction?.[i] ?? 0;
         });
 
         return row;
       });
 
       setChartData(formatted);
-    } catch (err) {
-      console.error("AI ERROR:", err);
-    }
-  };
+    };
 
-  const loadLogs = async () => {
-    try {
-      const res = await fetch("/api/log");
-      const json = await res.json();
-      setLogs(json.data || []);
-    } catch (err) {
-      console.error("LOG ERROR:", err);
-    }
-  };
+    loadAI();
+  }, [products, mode]);
+
+  const groupedLogs = useMemo(() => {
+    const grouped = logs.reduce<Record<string, any>>((acc, log) => {
+      const key = log.invoice_id || "no-invoice";
+
+      if (!acc[key]) {
+        acc[key] = {
+          invoice_id: key,
+          created_at: log.created_at,
+          user: log.created_by || "POS",
+          items: [],
+          type: log.type,
+        };
+      }
+
+      acc[key].items.push(log);
+      return acc;
+    }, {});
+
+    return Object.values(grouped)
+      .sort(
+        (a, b) =>
+          new Date(b.created_at || 0).getTime() -
+          new Date(a.created_at || 0).getTime(),
+      )
+      .slice(0, 3);
+  }, [logs]);
 
   return (
-    <main className="min-h-screen bg-gray-100 p-10">
+    <main className="min-h-screen bg-gray-100 p-4 md:p-10">
       <div className="max-w-6xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold">Inventory AI</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+          Inventory AI
+        </h1>
 
         {/* FILTER */}
-        <div className="mb-4 flex gap-4 items-center">
-          {/* CATEGORY */}
-          <div>
-            <label className="mr-2 font-semibold">Category:</label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="border px-2 py-1 rounded"
-            >
-              <option value="">All Categories</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="flex flex-col md:flex-row gap-4 md:items-center">
+          <CategoryDropdown
+            categories={categories}
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+          />
 
-          {/* 🔥 TOGGLE */}
-          <div className="flex border rounded overflow-hidden">
+          <div className="flex border rounded overflow-hidden w-full md:w-auto">
             <button
               onClick={() => setMode("week")}
-              className={`px-4 py-1 text-sm ${
+              className={`flex-1 md:flex-none px-4 py-2 text-sm ${
                 mode === "week"
                   ? "bg-blue-600 text-white"
                   : "bg-white text-gray-600"
@@ -173,7 +245,7 @@ export default function Home() {
 
             <button
               onClick={() => setMode("month")}
-              className={`px-4 py-1 text-sm ${
+              className={`flex-1 md:flex-none px-4 py-2 text-sm ${
                 mode === "month"
                   ? "bg-blue-600 text-white"
                   : "bg-white text-gray-600"
@@ -185,38 +257,72 @@ export default function Home() {
         </div>
 
         {/* CHART */}
-        <div className="bg-white shadow rounded-xl p-6">
-          <h2 className="text-xl font-semibold mb-4">
+        <div className="bg-white shadow rounded-xl p-4 md:p-6">
+          <h2 className="text-lg md:text-xl font-semibold mb-4 text-gray-800">
             AI Sales Prediction ({mode === "week" ? "7 Days" : "30 Days"})
           </h2>
 
-          <div className="w-full h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
+          <div className="w-full h-64 md:h-80 min-w-0">
+            {chartData.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No data
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 10, right: 10, left: -30, bottom: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" minTickGap={20} />
+                  <YAxis width={30} />
+                  <Tooltip formatter={(v) => formatVND(Number(v))} />
 
-                {products.map((p, index) => (
-                  <Line
-                    key={p.id}
-                    dataKey={p.name}
-                    stroke={colors[index % colors.length]}
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+                  {products.map((p, index) => (
+                    <Line
+                      key={p.id}
+                      dataKey={p.id}
+                      stroke={colors[index % colors.length]}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          {/* 🔥 CUSTOM LEGEND */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            {products.map((p, index) => (
+              <div
+                key={p.id}
+                className="flex items-center gap-2 text-xs bg-gray-100 px-2 py-1 rounded max-w-[120px]"
+              >
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    background: colors[index % colors.length],
+                    borderRadius: "50%",
+                    flexShrink: 0,
+                  }}
+                />
+
+                <span className="truncate" title={p.name}>
+                  {p.name}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* LOG */}
-        <div className="bg-white shadow rounded-xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Stock Movement Logs</h2>
+        <div className="bg-white shadow rounded-xl p-4 md:p-6">
+          <div className="flex justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Stock Movement Logs
+            </h2>
 
             <button
               onClick={() => router.push("/logs")}
@@ -226,51 +332,23 @@ export default function Home() {
             </button>
           </div>
 
-          {Object.values(
-            [...logs]
-              .sort(
-                (a, b) =>
-                  new Date(b.created_at || 0).getTime() -
-                  new Date(a.created_at || 0).getTime(),
-              )
-              .reduce<Record<string, any>>((acc, log) => {
-                const key = log.invoice_id || "no-invoice";
+          {groupedLogs.length === 0 && <p>No logs</p>}
 
-                if (!acc[key]) {
-                  acc[key] = {
-                    invoice_id: key,
-                    created_at: log.created_at,
-                    user: log.created_by || "POS",
-                    items: [],
-                    type: log.type,
-                  };
-                }
+          {groupedLogs.map((order: any) => {
+            const total = order.items.reduce(
+              (sum: number, i: Log) => sum + i.quantity * (i.price || 0),
+              0,
+            );
 
-                acc[key].items.push(log);
-                return acc;
-              }, {}),
-          )
-            .slice(0, 3)
-            .map((order: any) => {
-              const shortId =
-                order.invoice_id !== "no-invoice"
-                  ? order.invoice_id.slice(0, 8).toUpperCase()
-                  : "N/A";
-
-              const total = order.items.reduce(
-                (sum: number, i: Log) => sum + i.quantity * (i.price || 0),
-                0,
-              );
-
-              return (
-                <DashboardLogItem
-                  key={order.invoice_id}
-                  order={order}
-                  shortId={shortId}
-                  total={total}
-                />
-              );
-            })}
+            return (
+              <DashboardLogItem
+                key={order.invoice_id}
+                order={order}
+                shortId={order.invoice_id?.slice(0, 8)}
+                total={total}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -280,51 +358,40 @@ export default function Home() {
 }
 
 /* =========================
-   DROPDOWN COMPONENT
+   LOG ITEM
 ========================= */
-
-function DashboardLogItem({
-  order,
-  shortId,
-  total,
-}: {
-  order: any;
-  shortId: string;
-  total: number;
-}) {
+function DashboardLogItem({ order, shortId, total }: any) {
   const [open, setOpen] = useState(false);
   const isExport = order.type === "export";
 
   return (
-    <div className="border rounded-xl p-4 mb-3">
+    <div className="border rounded-xl p-3 mb-3">
       <div
         onClick={() => setOpen(!open)}
         className="flex justify-between cursor-pointer"
       >
         <div>
-          <h3 className="font-semibold flex items-center gap-2">
+          <h3 className="font-semibold flex gap-2">
             <span
-              className={`px-2 py-1 rounded text-white text-xs font-bold ${
+              className={`px-2 py-1 text-white text-xs rounded ${
                 isExport ? "bg-red-500" : "bg-green-500"
               }`}
             >
-              🧾 INV-{shortId}
+              INV-{shortId}
             </span>
-
-            <span>{open ? "▲" : "▼"}</span>
           </h3>
           <p className="text-xs text-gray-500">👤 {order.user}</p>
         </div>
 
-        <div className="font-bold text-green-600">💰{formatVND(total)}</div>
+        <div className="font-bold text-green-600">{formatVND(total)}</div>
       </div>
 
       {open && (
-        <div className="mt-3 border-t pt-3">
+        <div className="mt-3 border-t pt-3 text-sm">
           {order.items.map((i: Log) => (
-            <div key={i.id} className="grid grid-cols-4 gap-2 py-1 text-sm">
+            <div key={i.id} className="grid grid-cols-4 gap-2 py-1">
               <span>{i.products?.name || "Unknown"}</span>
-              <span>{i.type === "export" ? "📦 Export" : "📥 Import"}</span>
+              <span>{i.type}</span>
               <span>x{i.quantity}</span>
               <span className="text-right">{formatVND(i.price || 0)}</span>
             </div>

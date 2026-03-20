@@ -1,26 +1,73 @@
 @import "tailwindcss";
 
+/* =====================
+   ROOT COLOR SYSTEM
+===================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #0f172a;
+  --border: #e5e7eb;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* DARK MODE */
+.dark {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #f1f5f9;
+  --border: #334155;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* =====================
+   BASE
+===================== */
 body {
   background: var(--bg);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =====================
+   CARD
+===================== */
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+/* =====================
+   TABLE (MOBILE SCROLL)
+===================== */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* =====================
+   MOBILE FIX
+===================== */
+@media (max-width: 768px) {
+  .page {
+    padding: 15px !important;
+  }
+
+  .stats-row {
+    flex-direction: column !important;
+  }
+
+  .actions {
+    flex-direction: column !important;
+    gap: 5px !important;
+  }
+
+  table {
+    font-size: 12px;
+    min-width: 600px;
+  }
+
+  input,
+  select {
+    width: 100% !important;
+  }
 }

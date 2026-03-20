@@ -409,116 +409,118 @@ export default function Dashboard() {
         {/* PRODUCTS */}
 
         <Card title="Products">
-          <table style={table}>
-            <thead>
-              <tr>
-                <th style={th}>Product</th>
-                <th style={th}>Category</th>
-                <th style={th}>Price</th>
-                <th style={th}>Stock</th>
-                <th style={th}>Status</th>
-                <th style={th}>QR</th>
-                <th style={th}>Actions</th>
-              </tr>
-            </thead>
+          <div className="table-wrapper">
+            <table style={table}>
+              <thead>
+                <tr>
+                  <th style={th}>Product</th>
+                  <th style={th}>Category</th>
+                  <th style={th}>Price</th>
+                  <th style={th}>Stock</th>
+                  <th style={th}>Status</th>
+                  <th style={th}>QR</th>
+                  <th style={th}>Actions</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {products.map((p) => {
-                const stock = p.inventory?.stock || 0;
-                const min = p.min_stock || 5;
+              <tbody>
+                {products.map((p) => {
+                  const stock = p.inventory?.stock || 0;
+                  const min = p.min_stock || 5;
 
-                let status = "OK";
-                let color = "#16a34a";
+                  let status = "OK";
+                  let color = "#16a34a";
 
-                if (stock === 0) {
-                  status = "Out";
-                  color = "#dc2626";
-                } else if (stock <= min) {
-                  status = "Low";
-                  color = "#f59e0b";
-                }
+                  if (stock === 0) {
+                    status = "Out";
+                    color = "#dc2626";
+                  } else if (stock <= min) {
+                    status = "Low";
+                    color = "#f59e0b";
+                  }
 
-                return (
-                  <tr key={p.id} style={row}>
-                    <td style={td}>{p.name}</td>
-                    <td style={td}>{p.categories?.name || "-"}</td>
-                    <td style={td}>{formatVND(p.price || 0)}</td>
+                  return (
+                    <tr key={p.id} style={row}>
+                      <td style={td}>{p.name}</td>
+                      <td style={td}>{p.categories?.name || "-"}</td>
+                      <td style={td}>{formatVND(p.price || 0)}</td>
 
-                    <td style={td}>
-                      <span
-                        style={{
-                          ...stockBadge,
-                          background: stock === 0 ? "#fee2e2" : "#dcfce7",
-                          color: stock === 0 ? "#dc2626" : "#166534",
-                        }}
-                      >
-                        {stock}
-                      </span>
-                    </td>
-
-                    <td style={td}>
-                      <span
-                        style={{
-                          padding: "4px 10px",
-                          borderRadius: 20,
-                          background: color,
-                          color: "white",
-                        }}
-                      >
-                        {status}
-                      </span>
-                    </td>
-
-                    <td style={td}>
-                      <button onClick={() => showQR(p.barcode)} style={qrBtn}>
-                        QR
-                      </button>
-                    </td>
-
-                    <td style={td}>
-                      <div style={actionGroup}>
-                        <button
-                          onClick={() => importStock(p)}
-                          disabled={!(role === "admin")}
+                      <td style={td}>
+                        <span
                           style={{
-                            ...greenBtn,
-                            opacity:
-                              role === "admin" || role === "seller" ? 1 : 0.4,
+                            ...stockBadge,
+                            background: stock === 0 ? "#fee2e2" : "#dcfce7",
+                            color: stock === 0 ? "#dc2626" : "#166534",
                           }}
                         >
-                          Import
-                        </button>
+                          {stock}
+                        </span>
+                      </td>
 
-                        <button
-                          onClick={() => editProduct(p)}
-                          disabled={role !== "admin"}
+                      <td style={td}>
+                        <span
                           style={{
-                            ...editBtn,
-                            opacity: role === "admin" ? 1 : 0.4,
-                            cursor:
-                              role === "admin" ? "pointer" : "not-allowed",
+                            padding: "4px 10px",
+                            borderRadius: 20,
+                            background: color,
+                            color: "white",
                           }}
                         >
-                          Edit
-                        </button>
+                          {status}
+                        </span>
+                      </td>
 
-                        <button
-                          onClick={() => deleteProduct(p.id)}
-                          disabled={role !== "admin"}
-                          style={{
-                            ...deleteBtn,
-                            opacity: role === "admin" ? 1 : 0.4,
-                          }}
-                        >
-                          Delete
+                      <td style={td}>
+                        <button onClick={() => showQR(p.barcode)} style={qrBtn}>
+                          QR
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+
+                      <td style={td}>
+                        <div style={actionGroup}>
+                          <button
+                            onClick={() => importStock(p)}
+                            disabled={!(role === "admin")}
+                            style={{
+                              ...greenBtn,
+                              opacity:
+                                role === "admin" || role === "seller" ? 1 : 0.4,
+                            }}
+                          >
+                            Import
+                          </button>
+
+                          <button
+                            onClick={() => editProduct(p)}
+                            disabled={role !== "admin"}
+                            style={{
+                              ...editBtn,
+                              opacity: role === "admin" ? 1 : 0.4,
+                              cursor:
+                                role === "admin" ? "pointer" : "not-allowed",
+                            }}
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            onClick={() => deleteProduct(p.id)}
+                            disabled={role !== "admin"}
+                            style={{
+                              ...deleteBtn,
+                              opacity: role === "admin" ? 1 : 0.4,
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </Card>
         <Card title="Monthly Revenue">
           {/* Dropdown lọc */}
@@ -560,57 +562,60 @@ export default function Dashboard() {
               Filter
             </button>
           </div>
-
-          {/* Bảng doanh thu */}
-          <table style={table}>
-            <thead>
-              <tr>
-                <th style={th}>Month</th>
-                <th style={th}>Total Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              {revenue.length > 0 ? (
-                revenue.map((r, i) => (
-                  <tr key={i}>
-                    <td style={td}>{r.month}</td>
-                    <td style={td}>{formatVND(r.total_revenue)}</td>
-                  </tr>
-                ))
-              ) : (
+          <div className="table-wrapper">
+            {/* Bảng doanh thu */}
+            <table style={table}>
+              <thead>
                 <tr>
-                  <td style={td} colSpan={2}>
-                    No data
-                  </td>
+                  <th style={th}>Month</th>
+                  <th style={th}>Total Revenue</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {revenue.length > 0 ? (
+                  revenue.map((r, i) => (
+                    <tr key={i}>
+                      <td style={td}>{r.month}</td>
+                      <td style={td}>{formatVND(r.total_revenue)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td style={td} colSpan={2}>
+                      No data
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </Card>
         {/* AI TABLE */}
 
         <Card title="AI Prediction Insights">
-          <table style={table}>
-            <thead>
-              <tr>
-                <th style={th}>Product</th>
-                <th style={th}>Predicted Today</th>
-                <th style={th}>Avg Daily Sales</th>
-                <th style={th}>Out of Stock</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {predictions.map((p, i) => (
-                <tr key={i}>
-                  <td style={td}>{p.name}</td>
-                  <td style={td}>{p.prediction?.[0] ?? 0}</td>
-                  <td style={td}>{p.predictedSales ?? 0}</td>
-                  <td style={td}>{p.daysLeft ?? "-"} days</td>
+          <div className="table-wrapper">
+            <table style={table}>
+              <thead>
+                <tr>
+                  <th style={th}>Product</th>
+                  <th style={th}>Predicted Today</th>
+                  <th style={th}>Avg Daily Sales</th>
+                  <th style={th}>Out of Stock</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {predictions.map((p, i) => (
+                  <tr key={i}>
+                    <td style={td}>{p.name}</td>
+                    <td style={td}>{p.prediction?.[0] ?? 0}</td>
+                    <td style={td}>{p.predictedSales ?? 0}</td>
+                    <td style={td}>{p.daysLeft ?? "-"} days</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Card>
 
         {/* CHART */}
@@ -720,15 +725,24 @@ function StatCard({ title, value }) {
 
 /* STYLES */
 
-const page = { padding: 40, background: "#f8fafc", minHeight: "100vh" };
+const page = {
+  padding: 40,
+  background: "var(--bg)",
+  minHeight: "100vh",
+  color: "var(--text)",
+};
 const title = { marginBottom: 30 };
 
 const statsRow = { display: "flex", gap: 20, marginBottom: 30 };
 
-const statCard = { background: "white", padding: 20, borderRadius: 10 };
+const statCard = {
+  background: "var(--card)",
+  padding: 20,
+  borderRadius: 10,
+};
 
 const card = {
-  background: "white",
+  background: "var(--card)",
   padding: 25,
   borderRadius: 12,
   marginBottom: 30,
@@ -743,13 +757,13 @@ const table = {
   textAlign: "center",
 };
 
-const th = { padding: 12, borderBottom: "2px solid #eee" };
-const td = { padding: 12, borderBottom: "1px solid #eee" };
-
+const th = { padding: 12, borderBottom: "2px solid var(--border)" };
+const td = { padding: 12, borderBottom: "1px solid var(--border)" };
 const input = {
   padding: 8,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 6,
+  width: "100%",
 };
 
 const primaryBtn = {
@@ -806,4 +820,5 @@ const actionGroup = {
   display: "flex",
   gap: 8,
   justifyContent: "center",
+  flexWrap: "wrap",
 };
