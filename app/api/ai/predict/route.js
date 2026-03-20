@@ -1,128 +1,101 @@
-import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { supabase } from "@/lib/supabase";
 
-/* ========================
-CACHE + RATE LIMIT
-======================== */
-let lastRun = 0;
-let cachedResult = null;
-const COOLDOWN = 60000;
-
-/* ========================
-CLIENTS
-======================== */
-const groq = new OpenAI({
-  baseURL: "https://api.groq.com/openai/v1",
-  apiKey: process.env.GROQ_API_KEY,
-});
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-export async function GET() {
-  return Response.json({
-    message: "AI predict API working",
+/* =========================
+HELPERS
+========================= */
+const smooth = (arr) =>
+  arr.map((v, i, a) => {
+    const prev = a[i - 1] ?? v;
+    const next = a[i + 1] ?? v;
+    return Math.round((prev + v + next) / 3);
   });
-}
 
+/* =========================
+MAIN
+========================= */
 export async function POST(req) {
   try {
-    let body = {};
-
-    try {
-      body = await req.json();
-    } catch {
-      body = {};
-    }
-
+    const body = await req.json();
     const products = body.products || [];
+    const mode = body.mode || "week";
 
-    const now = Date.now();
-
-    /* ========================
-    CACHE CHECK
-    ======================== */
-    if (now - lastRun < COOLDOWN && cachedResult) {
-      return Response.json({
-        data: cachedResult,
-        cached: true,
-      });
-    }
+    const DAYS = mode === "month" ? 30 : 7;
 
     if (!products.length) {
       return Response.json({ data: [] });
     }
 
-    const prompt = `
-You are an inventory AI.
+    /* =========================
+    GET SALES LAST 30 DAYS
+    ========================= */
+    const { data: sales, error } = await supabase
+      .from("sales")
+      .select("product_id, quantity, created_at")
+      .gte(
+        "created_at",
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      );
 
-Predict sales for the next 7 days.
-
-Return ONLY valid JSON.
-
-Format:
-[
- {
-  "name":"product",
-  "prediction":[7 numbers],
-  "predictedSales":number,
-  "daysLeft":number
- }
-]
-
-Products:
-${JSON.stringify(products)}
-`;
-
-    let text = null;
-
-    /* ========================
-    TRY GROQ FIRST
-    ======================== */
-    try {
-      const completion = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.3,
-      });
-
-      text = completion.choices[0].message.content;
-      console.log("Using Groq");
-    } catch (err) {
-      console.log("Groq failed:", err.message);
+    if (error) {
+      console.error(error);
+      return Response.json({ data: [] });
     }
 
-    /* ========================
-    FALLBACK GEMINI
-    ======================== */
-    if (!text) {
-      const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash-latest",
+    /* =========================
+    GROUP SALES BY PRODUCT + DAY
+    ========================= */
+    const map = {};
+
+    sales.forEach((s) => {
+      const day = new Date(s.created_at).toISOString().slice(0, 10);
+
+      if (!map[s.product_id]) map[s.product_id] = {};
+      if (!map[s.product_id][day]) map[s.product_id][day] = 0;
+
+      map[s.product_id][day] += s.quantity;
+    });
+
+    /* =========================
+    BUILD PREDICTION
+    ========================= */
+    const result = products.map((p) => {
+      const history = Object.values(map[p.id] || {});
+
+      // 🔥 BASE (trung bình bán)
+      const base =
+        history.length > 0
+          ? Math.round(history.reduce((a, b) => a + b, 0) / history.length)
+          : Math.floor(Math.random() * 5) + 1;
+
+      /* =========================
+      PREDICT FUTURE
+      ========================= */
+      const rawPrediction = Array.from({ length: DAYS }).map((_, i) => {
+        const trend = i * 0.2; // tăng nhẹ theo ngày
+        const variation = Math.floor(base * 0.3);
+
+        return Math.max(
+          0,
+          base + trend + (Math.random() * variation - variation / 2),
+        );
       });
 
-      const result = await model.generateContent(prompt);
-      text = result.response.text();
-      console.log("Using Gemini");
-    }
+      const prediction = smooth(rawPrediction).map((n) => Math.round(n));
 
-    /* ========================
-    CLEAN JSON
-    ======================== */
-    text = text
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+      return {
+        name: p.name,
+        prediction,
+        predictedSales: prediction.reduce((a, b) => a + b, 0),
+        daysLeft: Math.max(
+          1,
+          Math.floor((p.inventory?.stock || 10) / (base || 1)),
+        ),
+      };
+    });
 
-    const data = JSON.parse(text);
-
-    /* ========================
-    SAVE CACHE
-    ======================== */
-    lastRun = Date.now();
-    cachedResult = data;
-
-    return Response.json({ data });
+    return Response.json({ data: result });
   } catch (err) {
-    console.error("AI error:", err);
+    console.error("Predict error:", err);
 
     return Response.json({
       data: [],
