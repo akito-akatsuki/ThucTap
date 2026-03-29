@@ -682,10 +682,17 @@ export default function Home() {
 
             {/* RECENT LOGS */}
             <div className="bg-white shadow-sm rounded-[32px] p-8 border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-6">
-                Inventory Logs
-              </h3>
-
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Inventory Logs
+                </h3>
+                <button
+                  onClick={() => router.push("/logs")}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition"
+                >
+                  View All Logs
+                </button>
+              </div>
               <div className="space-y-4">
                 {groupedLogs.slice(0, 3).map((log) => (
                   <div
