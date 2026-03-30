@@ -501,13 +501,34 @@ export default function Home() {
       <div className="max-w-[1600px] mx-auto space-y-8">
         {/* KPI */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <KPICard
-            title="Monthly Revenue"
-            value={loadingRevenue ? "Loading..." : revenueMonthly}
-            subValue={`Month ${selectedMonth}/${selectedYear}`}
-            icon={DollarSign}
-            color="bg-emerald-500"
-          />
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">
+                  Monthly Revenue
+                </p>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  {loadingRevenue ? "Loading..." : revenueMonthly}
+                </h3>
+
+                {/* DROPDOWN */}
+                <div className="flex gap-2 mt-2">
+                  <MonthDropdown
+                    value={selectedMonth}
+                    onChange={setSelectedMonth}
+                  />
+                  <YearDropdown
+                    value={selectedYear}
+                    onChange={setSelectedYear}
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-emerald-500">
+                <DollarSign className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </div>
 
           <KPICard
             title="Yearly Revenue"
@@ -532,12 +553,6 @@ export default function Home() {
             icon={Activity}
             color="bg-indigo-600"
           />
-        </div>
-
-        {/* FILTER */}
-        <div className="flex flex-wrap gap-3 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm w-fit">
-          <MonthDropdown value={selectedMonth} onChange={setSelectedMonth} />
-          <YearDropdown value={selectedYear} onChange={setSelectedYear} />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -657,27 +672,6 @@ export default function Home() {
                   <span className="font-bold">2</span>
                 </div>
               </div>
-            </div>
-
-            {/* QUICK ACTIONS */}
-            <div className="bg-white shadow-sm rounded-[32px] p-8 border border-gray-100 space-y-4">
-              <h3 className="text-lg font-bold text-gray-900">Quick Actions</h3>
-
-              <QuickAction
-                title="Scan Barcode"
-                desc="Use camera to update inventory"
-                icon={Zap}
-                color="bg-blue-600"
-                onClick={() => router.push("/scan")}
-              />
-
-              <QuickAction
-                title="Financial Reports"
-                desc="View revenue & profit"
-                icon={DollarSign}
-                color="bg-emerald-500"
-                onClick={() => router.push("/dashboard")}
-              />
             </div>
 
             {/* RECENT LOGS */}

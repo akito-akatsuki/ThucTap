@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import ConfirmModal from "@/components/ConfirmModal";
 
@@ -9,9 +9,22 @@ export default function Employees() {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+
+  // Filtered users
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const matchesSearch = u.email
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesFilter = filterRole === "all" || u.role === filterRole;
+      return matchesSearch && matchesFilter;
+    });
+  }, [users, searchTerm, filterRole]);
 
   useEffect(() => {
     init();
@@ -25,7 +38,6 @@ export default function Employees() {
     if (!session) return;
 
     const email = session.user.email;
-
     const res = await fetch(`/api/users?email=${email}`);
     const json = await res.json();
 
@@ -98,237 +110,379 @@ export default function Employees() {
   };
 
   if (loading) {
-    return <div style={container}>Loading...</div>;
-  }
+    return (
+      <div className="dashboard-page">
+        <div className="dashboard-card">
+          <div className="dashboard-card-header flex flex-col md:flex-row md:items-center gap-4 mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-xl">👨‍💼</span>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  Employee Management
+                </h1>
+                <p className="text-gray-500">Manage your team members</p>
+              </div>
+            </div>
+          </div>
 
-  if (role !== "admin") {
-    return <div style={container}>Access denied</div>;
-  }
-
-  return (
-    <div style={container}>
-      <h2 style={title}>👨‍💼 Employee Management</h2>
-
-      {/* =========================
-   EMPLOYEES TABLE / CARD VIEW
-========================= */}
-      <div style={card}>
-        <div className="hidden md:block">
-          {/* Desktop Table */}
-          <table style={table}>
-            <thead>
-              <tr>
-                <th style={th}>User</th>
-                <th style={th}>Role</th>
-                <th style={th}>Created</th>
-                <th style={th}></th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {users.map((u) => {
-                const isMe = u.id === currentUser?.id;
-                return (
-                  <tr key={u.id} style={row}>
-                    <td style={userCell}>
-                      <div style={avatar}>
-                        {u.email?.charAt(0).toUpperCase()}
-                      </div>
-                      <div
-                        style={{ overflow: "hidden", textOverflow: "ellipsis" }}
-                      >
-                        <div style={email}>
-                          {u.email}{" "}
-                          {isMe && (
-                            <span style={{ color: "red", marginLeft: 6 }}>
-                              (You)
-                            </span>
-                          )}
+          {/* Skeleton Table */}
+          <div className="table-wrapper">
+            <table className="data-table w-full">
+              <thead>
+                <tr>
+                  <th className="p-4"></th>
+                  <th className="p-4"></th>
+                  <th className="p-4"></th>
+                  <th className="p-4"></th>
+                  <th className="p-4"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <tr
+                    key={i}
+                    className="animate-pulse border-b border-gray-100"
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-gray-200 w-10 h-10 rounded-full"></div>
+                        <div className="space-y-2">
+                          <div className="bg-gray-200 h-4 w-24 rounded"></div>
+                          <div className="bg-gray-200 h-3 w-16 rounded"></div>
                         </div>
                       </div>
                     </td>
-
-                    <td>
-                      <select
-                        value={u.role}
-                        disabled={isMe}
-                        onChange={(e) => changeRole(u.id, e.target.value)}
-                        style={selectStyle}
-                      >
-                        <option value="admin">Admin</option>
-                        <option value="seller">Seller</option>
-                      </select>
+                    <td className="p-4">
+                      <div className="bg-gray-200 h-8 w-20 rounded-lg"></div>
                     </td>
-
-                    <td style={date}>
-                      {new Date(u.created_at).toLocaleDateString()}
+                    <td className="p-4">
+                      <div className="bg-gray-200 h-4 w-24 rounded"></div>
                     </td>
-
-                    <td>
-                      <button
-                        style={{
-                          ...deleteBtn,
-                          opacity: isMe ? 0.5 : 1,
-                          cursor: isMe ? "not-allowed" : "pointer",
-                        }}
-                        disabled={isMe}
-                        onClick={() => {
-                          setSelectedUserId(u.id);
-                          setConfirmOpen(true);
-                        }}
-                      >
-                        Delete
-                      </button>
+                    <td className="p-4">
+                      <div className="bg-gray-200 h-4 w-20 rounded"></div>
+                    </td>
+                    <td className="p-4">
+                      <div className="bg-gray-200 h-8 w-16 rounded-lg"></div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile Card View */}
-        <div className="md:hidden flex flex-col gap-4">
-          {users.map((u) => {
-            const isMe = u.id === currentUser?.id;
-            return (
-              <div
-                key={u.id}
-                className="bg-gray-50 p-4 rounded-lg shadow-sm flex flex-col gap-2"
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div style={avatar}>{u.email?.charAt(0).toUpperCase()}</div>
-                    <div className="text-sm font-medium truncate">
-                      {u.email}{" "}
-                      {isMe && <span className="text-red-500 ml-1">(You)</span>}
-                    </div>
-                  </div>
-
-                  <button
-                    style={{
-                      ...deleteBtn,
-                      opacity: isMe ? 0.5 : 1,
-                      cursor: isMe ? "not-allowed" : "pointer",
-                    }}
-                    disabled={isMe}
-                    onClick={() => {
-                      setSelectedUserId(u.id);
-                      setConfirmOpen(true);
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-1 text-sm">
-                  <div>
-                    Role:{" "}
-                    <select
-                      value={u.role}
-                      disabled={isMe}
-                      onChange={(e) => changeRole(u.id, e.target.value)}
-                      style={selectStyle}
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="seller">Seller</option>
-                    </select>
-                  </div>
-                  <div>
-                    Created: {new Date(u.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      {confirmOpen && (
-        <ConfirmModal
-          text="This user will be permanently deleted."
-          onCancel={() => {
-            setConfirmOpen(false);
-            setSelectedUserId(null);
-          }}
-          onConfirm={() => {
-            deleteUser(selectedUserId);
-            setConfirmOpen(false);
-            setSelectedUserId(null);
-          }}
-        />
-      )}
+    );
+  }
+
+  if (role !== "admin") {
+    return (
+      <div className="dashboard-page flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-gray-400 to-gray-500 rounded-xl flex items-center justify-center">
+            <span className="text-2xl">🔒</span>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Access Denied
+          </h2>
+          <p className="text-gray-500 max-w-md">
+            Admin privileges required to manage employees.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dashboard-page">
+      <div className="dashboard-card">
+        {/* Header */}
+        <div className="dashboard-card-header">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-xl">👨‍💼</span>
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                Employee Management
+              </h1>
+              <p className="text-gray-500 mt-1">
+                {filteredUsers.length} of {users.length} employees
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex flex-col lg:flex-row gap-4 mb-8 p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border border-gray-100 dark:border-gray-700">
+          <div className="relative flex-1 group">
+            {/* Icon Container: Fix lỗi đè chữ bằng cách dùng absolute căn giữa */}
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg
+                className="w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+
+            {/* Input: pl-12 để đẩy chữ qua phải nhường chỗ cho icon */}
+            <input
+              type="text"
+              placeholder="Search employees by email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-medium text-gray-700 dark:text-gray-200"
+            />
+          </div>
+
+          {/* Role Filter: Đồng bộ UI với thanh search */}
+          <div className="relative w-full lg:w-48">
+            <select
+              value={filterRole}
+              onChange={(e) => setFilterRole(e.target.value)}
+              className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none appearance-none cursor-pointer font-medium text-gray-700 dark:text-gray-200"
+            >
+              <option value="all">All Roles</option>
+              <option value="admin">Admins</option>
+              <option value="seller">Sellers</option>
+            </select>
+            {/* Custom mũi tên cho select */}
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+        {/* Table / Cards */}
+        {filteredUsers.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-2xl flex items-center justify-center">
+              <span className="text-3xl">👥</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              No employees found
+            </h3>
+            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              {searchTerm || filterRole !== "all"
+                ? "Try adjusting your search or filter criteria."
+                : "Get started by adding your first employee."}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden lg:block">
+              <div className="table-wrapper">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Joined</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((u) => {
+                      const isMe = u.id === currentUser?.id;
+                      const roleColor =
+                        u.role === "admin"
+                          ? "status-ok bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800/50"
+                          : "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50";
+
+                      return (
+                        <tr key={u.id}>
+                          <td>
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm uppercase shadow-md flex-shrink-0 bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                                  {u.email?.charAt(0).toUpperCase()}
+                                </div>
+                                {isMe && (
+                                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 border-2 border-white rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm">
+                                    You
+                                  </div>
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="font-medium text-gray-900 truncate">
+                                  {u.email}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="font-mono text-sm text-gray-900 truncate max-w-xs">
+                            {u.email}
+                          </td>
+
+                          <td>
+                            <div
+                              className={`status-badge ${roleColor} px-3 py-1`}
+                            >
+                              {u.role.toUpperCase()}
+                            </div>
+                          </td>
+
+                          <td className="text-sm text-gray-500">
+                            {new Date(u.created_at).toLocaleDateString()}
+                          </td>
+
+                          <td className="space-x-2">
+                            <select
+                              value={u.role}
+                              disabled={isMe}
+                              onChange={(e) => changeRole(u.id, e.target.value)}
+                              className="form-input text-sm px-3 py-1.5 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="seller">Seller</option>
+                            </select>
+                            <button
+                              className="btn-danger text-sm px-3 py-1.5 !shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              disabled={isMe}
+                              onClick={() => {
+                                setSelectedUserId(u.id);
+                                setConfirmOpen(true);
+                              }}
+                              title={
+                                isMe ? "Cannot delete yourself" : "Delete user"
+                              }
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {filteredUsers.map((u) => {
+                const isMe = u.id === currentUser?.id;
+                const roleColor =
+                  u.role === "admin"
+                    ? "status-ok bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400"
+                    : "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400";
+
+                return (
+                  <div key={u.id} className="product-card">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-lg uppercase shadow-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex-shrink-0">
+                          {u.email?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-lg text-gray-900 truncate pr-4">
+                            {u.email}
+                          </div>
+                          {isMe && (
+                            <div className="text-red-500 font-medium text-sm mt-1">
+                              (You)
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 ml-4">
+                        <button
+                          className="btn-danger text-sm !shadow-sm opacity-75 hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={isMe}
+                          onClick={() => {
+                            setSelectedUserId(u.id);
+                            setConfirmOpen(true);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <div className="text-gray-500 uppercase text-xs font-medium tracking-wide mb-1">
+                          Role
+                        </div>
+                        <div
+                          className={`status-badge ${roleColor} px-3 py-1 inline-block`}
+                        >
+                          {u.role.toUpperCase()}
+                        </div>
+                      </div>
+                      <div className="select-container relative">
+                        <select
+                          value={u.role}
+                          disabled={isMe}
+                          onChange={(e) => changeRole(u.id, e.target.value)}
+                          className="form-input text-sm w-full pr-8 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="seller">Seller</option>
+                        </select>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 uppercase text-xs font-medium tracking-wide mb-1">
+                          Email
+                        </div>
+                        <div className="font-mono break-all text-gray-900">
+                          {u.email}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 uppercase text-xs font-medium tracking-wide mb-1">
+                          Joined
+                        </div>
+                        <div className="text-sm font-medium">
+                          {new Date(u.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {confirmOpen && (
+          <ConfirmModal
+            text="This user will be permanently deleted and cannot be recovered."
+            onCancel={() => {
+              setConfirmOpen(false);
+              setSelectedUserId(null);
+            }}
+            onConfirm={() => {
+              deleteUser(selectedUserId);
+              setConfirmOpen(false);
+              setSelectedUserId(null);
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }
-
-/* STYLES */
-const container = { padding: 20 };
-const title = { marginBottom: 20, fontSize: 20 };
-const card = {
-  background: "white",
-  borderRadius: 10,
-  padding: 15,
-  boxShadow: "0 5px 20px rgba(0,0,0,0.05)",
-};
-const tableWrapper = {
-  overflowX: "auto",
-  WebkitOverflowScrolling: "touch",
-};
-const table = {
-  width: "100%",
-  minWidth: 600,
-  borderCollapse: "collapse",
-};
-const th = {
-  textAlign: "left",
-  borderBottom: "1px solid #eee",
-  paddingBottom: 10,
-  fontSize: 14,
-  color: "#666",
-};
-const row = {
-  borderBottom: "1px solid #f3f3f3",
-};
-const userCell = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  padding: "10px 0",
-  minWidth: 120,
-};
-const avatar = {
-  width: 36,
-  height: 36,
-  borderRadius: "50%",
-  background: "#6366f1",
-  color: "white",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontWeight: "bold",
-  flexShrink: 0,
-};
-const email = {
-  fontSize: 14,
-  fontWeight: 500,
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
-const selectStyle = {
-  padding: "4px 6px",
-  borderRadius: 4,
-  fontSize: 14,
-  minWidth: 90,
-};
-const date = {
-  fontSize: 13,
-  color: "#666",
-};
-const deleteBtn = {
-  background: "#ef4444",
-  color: "white",
-  border: "none",
-  padding: "6px 10px",
-  borderRadius: 6,
-};

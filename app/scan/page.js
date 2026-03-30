@@ -11,17 +11,12 @@ export default function ScanPage() {
 
   const lastScanRef = useRef(0);
   const scanningRef = useRef(false);
-
-  /* ADD ALERT STATE */
   const alertRef = useRef(false);
 
   const [cart, setCart] = useState([]);
   const [scanning, setScanning] = useState(false);
 
-  /* =========================
-     HANDLE SCAN
-  ========================= */
-
+  // HANDLE SCAN
   const handleScan = async (barcode) => {
     const now = Date.now();
 
@@ -39,12 +34,10 @@ export default function ScanPage() {
         if (!alertRef.current) {
           toast.error(data.error);
           alertRef.current = true;
-
           setTimeout(() => {
             alertRef.current = false;
           }, 1500);
         }
-
         scanningRef.current = false;
         return;
       }
@@ -59,15 +52,12 @@ export default function ScanPage() {
             if (!alertRef.current) {
               toast.error("Out of stock");
               alertRef.current = true;
-
               setTimeout(() => {
                 alertRef.current = false;
               }, 1500);
             }
-
             return prev;
           }
-
           return prev.map((p) =>
             p.id === product.id ? { ...p, qty: p.qty + 1 } : p,
           );
@@ -91,10 +81,7 @@ export default function ScanPage() {
     scanningRef.current = false;
   };
 
-  /* =========================
-     CART FUNCTIONS
-  ========================= */
-
+  // CART FUNCTIONS
   const increaseQty = (id) => {
     const item = cart.find((p) => p.id === id);
 
@@ -102,7 +89,6 @@ export default function ScanPage() {
       if (!alertRef.current) {
         toast.error("Out of stock");
         alertRef.current = true;
-
         setTimeout(() => {
           alertRef.current = false;
         }, 1200);
@@ -126,8 +112,8 @@ export default function ScanPage() {
   const removeItem = (id) => {
     setCart((prev) => prev.filter((p) => p.id !== id));
   };
+
   const handleInputQty = (id, value) => {
-    // cho phép rỗng để nhập lại
     if (value === "") {
       setCart((prev) => prev.map((p) => (p.id === id ? { ...p, qty: "" } : p)));
       return;
@@ -140,32 +126,24 @@ export default function ScanPage() {
     const item = cart.find((p) => p.id === id);
     if (!item) return;
 
-    // ❌ vượt stock
     if (qty > item.stock) {
       if (!alertRef.current) {
         toast.error("Out of stock");
         alertRef.current = true;
-
         setTimeout(() => {
           alertRef.current = false;
         }, 1200);
       }
-
       qty = item.stock;
     }
 
     setCart((prev) => prev.map((p) => (p.id === id ? { ...p, qty } : p)));
   };
-  /* =========================
-     TOTAL
-  ========================= */
 
+  // TOTAL
   const total = cart.reduce((sum, p) => sum + Number(p.price) * p.qty, 0);
 
-  /* =========================
-     CHECKOUT
-  ========================= */
-
+  // CHECKOUT
   const goCheckout = () => {
     if (cart.length === 0) {
       toast.error("Cart empty");
@@ -173,226 +151,160 @@ export default function ScanPage() {
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
-
     router.push("/checkout");
   };
 
-  /* =========================
-     UI
-  ========================= */
-
   return (
     <div
-      style={{
-        padding: 40,
-        background: "#f8fafc",
-        minHeight: "100vh",
-        fontFamily: "Inter, Arial",
-      }}
+      className={
+        "dashboard-page bg-gradient-to-br from-slate-50 to-indigo-50/50 min-h-screen py-8 px-4 sm:px-6 lg:px-8"
+      }
     >
-      <h1 style={{ marginBottom: 30 }}>🛒 POS Scanner</h1>
+      <h1 className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-gray-900 to-slate-800 bg-clip-text text-transparent mb-12 animate-fade-in-up">
+        🛒 POS Scanner
+      </h1>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "360px 1fr",
-          gap: 30,
-        }}
-      >
-        {/* LEFT - SCANNER */}
-
-        <div
-          style={{
-            background: "white",
-            padding: 20,
-            borderRadius: 12,
-            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-          }}
-        >
-          <h2 style={{ marginBottom: 15 }}>📷 Scan Barcode</h2>
-
-          <div
-            style={{
-              borderRadius: 10,
-              overflow: "hidden",
-              border: "2px solid #eee",
-            }}
-          >
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,420px)_1fr] gap-8 max-w-7xl mx-auto">
+        {/* SCANNER CARD */}
+        <div className="stat-card bg-white/70 backdrop-blur-xl border border-white/30 shadow-2xl rounded-3xl p-8 hover:shadow-3xl transition-all duration-500 order-2 lg:order-1">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+            📷 Scan Barcode
+          </h2>
+          <div className="w-full h-96 lg:h-80 border-4 border-dashed border-gray-200/50 rounded-2xl overflow-hidden bg-gradient-to-b from-white/50 to-white/20 hover:border-emerald-300/50 transition-all duration-300">
             <Scanner onScan={handleScan} />
           </div>
+          <p className="mt-6 text-sm text-gray-500 text-center animate-pulse">
+            Point camera at barcode
+          </p>
         </div>
 
-        <div
-          style={{
-            background: "white",
-            padding: 20,
-            borderRadius: 12,
-            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-          }}
-        >
-          <h2 style={{ marginBottom: 20 }}>🧾 Invoice</h2>
+        {/* INVOICE CARD */}
+        <div className="dashboard-card shadow-2xl rounded-3xl p-8 max-h-[600px] flex flex-col hover:shadow-3xl transition-all duration-500 order-1 lg:order-2">
+          <div className="dashboard-card-header mb-8">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-700 bg-clip-text text-transparent flex items-center gap-3">
+              🧾 Invoice ({cart.length})
+            </h2>
+          </div>
 
-          <div
-            style={{
-              maxHeight: 350,
-              overflowY: "auto",
-            }}
-          >
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                tableLayout: "fixed",
-              }}
-            >
-              <thead>
-                <tr style={{ background: "#f1f5f9" }}>
-                  <th style={{ padding: 12, textAlign: "left", width: "40%" }}>
-                    Product
-                  </th>
-
-                  <th style={{ textAlign: "center", width: "15%" }}>Price</th>
-
-                  <th style={{ textAlign: "center", width: "20%" }}>Qty</th>
-
-                  <th style={{ textAlign: "center", width: "15%" }}>Total</th>
-
-                  <th style={{ width: "10%" }}></th>
-                </tr>
-              </thead>
-
-              <tbody>
+          <div className="flex-1 overflow-y-auto mb-8 pr-2 -mr-2">
+            {cart.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg">
+                  <span className="text-3xl">🛒</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-500 mb-2">
+                  Cart is empty
+                </h3>
+                <p className="text-gray-400">Scan products to get started</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
                 {cart.map((item) => (
-                  <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
-                    <td style={{ padding: 12 }}>{item.name}</td>
+                  <div
+                    key={item.id}
+                    className="group bg-white/60 backdrop-blur-sm hover:bg-white border border-gray-100/50 hover:border-emerald-200/50 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  >
+                    <div className="flex items-start lg:items-center justify-between gap-4 lg:gap-6">
+                      {/* Product Info */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-lg text-gray-900 group-hover:text-emerald-700 truncate mb-1">
+                          {item.name}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          Unit: {formatVND(item.price)}
+                        </p>
+                      </div>
 
-                    <td style={{ textAlign: "center" }}>${item.price}</td>
+                      {/* Price */}
+                      <div className="text-right hidden sm:block">
+                        <div className="text-2xl font-bold text-gray-900">
+                          {formatVND(item.price * item.qty)}
+                        </div>
+                        <div className="text-sm text-gray-500 line-through">
+                          {formatVND(item.price)}
+                        </div>
+                      </div>
 
-                    <td
-                      style={{
-                        textAlign: "center",
-                        padding: 10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          gap: 10,
-                        }}
-                      >
+                      {/* Qty Controls */}
+                      <div className="flex items-center gap-3 ml-auto sm:ml-0">
+                        <div className="flex items-center bg-white/80 backdrop-blur rounded-xl p-2 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200">
+                          <button
+                            onClick={() => decreaseQty(item.id)}
+                            className="w-10 h-10 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 flex items-center justify-center text-gray-600 hover:text-gray-800 font-bold transition-all duration-200 hover:scale-110"
+                            disabled={item.qty <= 1}
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            value={item.qty}
+                            min={1}
+                            max={item.stock}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) =>
+                              handleInputQty(item.id, e.target.value)
+                            }
+                            onWheel={(e) => e.target.blur()}
+                            className="w-20 text-center border-0 bg-transparent font-bold text-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2 py-1"
+                          />
+                          <button
+                            onClick={() => increaseQty(item.id)}
+                            className="w-10 h-10 rounded-lg border border-gray-300 hover:border-emerald-400 hover:bg-emerald-50 flex items-center justify-center text-gray-600 hover:text-emerald-600 font-bold transition-all duration-200 hover:scale-110"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* Mobile Price */}
+                        <div className="text-right sm:hidden text-lg font-bold text-gray-900">
+                          {formatVND(item.price * item.qty)}
+                        </div>
+
+                        {/* Remove Button */}
                         <button
-                          onClick={() => decreaseQty(item.id)}
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 6,
-                            border: "1px solid #ddd",
-                            background: "white",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                          }}
+                          onClick={() => removeItem(item.id)}
+                          className="w-12 h-12 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl flex items-center justify-center text-white font-bold text-lg transition-all duration-300 hover:scale-110 hover:rotate-5 active:scale-95"
+                          title="Remove item"
                         >
-                          -
-                        </button>
-
-                        <input
-                          type="number"
-                          value={item.qty}
-                          min={1}
-                          onFocus={(e) => e.target.select()} // ✅ BÔI ĐEN TOÀN BỘ
-                          onChange={(e) =>
-                            handleInputQty(item.id, e.target.value)
-                          }
-                          onWheel={(e) => e.target.blur()} // chống scroll phá số
-                          style={{
-                            width: 60,
-                            textAlign: "center",
-                            border: "1px solid #ddd",
-                            borderRadius: 6,
-                            padding: "4px 6px",
-                            fontWeight: "bold",
-                          }}
-                        />
-
-                        <button
-                          onClick={() => increaseQty(item.id)}
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 6,
-                            border: "1px solid #ddd",
-                            background: "white",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          +
+                          ✕
                         </button>
                       </div>
-                    </td>
+                    </div>
 
-                    <td style={{ textAlign: "center" }}>
-                      {formatVND((item.price || 0) * item.qty)}
-                    </td>
-
-                    <td style={{ textAlign: "center" }}>
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        style={{
-                          background: "#dc2626",
-                          color: "white",
-                          border: "none",
-                          width: 30,
-                          height: 30,
-                          borderRadius: 6,
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        ✕
-                      </button>
-                    </td>
-                  </tr>
+                    {/* Stock Warning */}
+                    {item.qty >= item.stock && (
+                      <div className="mt-3 p-2 bg-orange-100 border border-orange-200 rounded-xl">
+                        <span className="text-xs font-medium text-orange-800">
+                          ⚠️ Max stock reached
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
 
-          <div
-            style={{
-              marginTop: 15,
-              padding: 12,
-              background: "#f1f5f9",
-              borderRadius: 8,
-              display: "flex",
-              justifyContent: "space-between",
-              fontWeight: "bold",
-              fontSize: 16,
-            }}
-          >
-            <span>Total</span>
-            <span>{formatVND(total)}</span>
+          {/* TOTAL & CHECKOUT - STICKY */}
+          <div className="bg-white/90 backdrop-blur-xl border-t border-gray-200/50 pt-8 pb-2 rounded-2xl shadow-2xl sticky bottom-0 mt-auto">
+            <div className="flex items-center justify-between text-2xl font-black mb-6 px-2">
+              <span className="bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 bg-clip-text text-transparent">
+                Total
+              </span>
+              <span className="text-emerald-700 min-w-[150px] text-right">
+                {formatVND(total)}
+              </span>
+            </div>
+            <button
+              onClick={goCheckout}
+              disabled={cart.length === 0}
+              className="w-full btn-success text-lg py-4 px-8 font-bold shadow-2xl hover:shadow-3xl hover:-translate-y-1 transform transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            >
+              {cart.length === 0
+                ? "Add items to checkout"
+                : `Checkout ${cart.length} items`}
+            </button>
           </div>
-
-          <button
-            onClick={goCheckout}
-            style={{
-              width: "100%",
-              marginTop: 15,
-              padding: "14px",
-              background: "#16a34a",
-              color: "white",
-              border: "none",
-              borderRadius: 8,
-              fontSize: 16,
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            Checkout
-          </button>
         </div>
       </div>
     </div>
