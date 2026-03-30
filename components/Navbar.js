@@ -258,7 +258,7 @@ export default function Navbar() {
 
                   {/* Login Form */}
                   <div
-                    className={`fixed inset-0 z-[60] flex min-h-screen items-center justify-center p-4 overflow-y-auto md:inset-auto md:absolute md:right-0 md:top-full md:mt-3 ${showLoginForm ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+                    className={`fixed inset-0 z-[60] p-4 overflow-y-auto md:inset-auto md:absolute md:right-0 md:top-full md:mt-3 md:p-0 ${showLoginForm ? "opacity-100" : "opacity-0 pointer-events-none"}`}
                     onClick={(event) => {
                       if (event.target === event.currentTarget) {
                         closeLoginForm();
@@ -267,7 +267,7 @@ export default function Navbar() {
                   >
                     <div
                       ref={loginFormCardRef}
-                      className={`relative w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 dark:border-slate-700 p-8 transition-all duration-300 ${showLoginForm ? "opacity-100 scale-100" : "opacity-0 scale-95"} max-h-[calc(100vh-4rem)] overflow-y-auto`}
+                      className={`relative w-full max-w-xl md:w-[420px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 dark:border-slate-700 p-8 transition-all duration-300 transform origin-top-right ${showLoginForm ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-8 md:-translate-y-4"} max-h-[calc(100vh-4rem)] overflow-y-auto`}
                     >
                       <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-black text-gray-900 dark:text-slate-100">
