@@ -157,23 +157,23 @@ export default function ScanPage() {
   return (
     <div
       className={
-        "dashboard-page bg-gradient-to-br from-slate-50 to-indigo-50/50 min-h-screen py-8 px-4 sm:px-6 lg:px-8"
+        "dashboard-page bg-gradient-to-br from-slate-50 to-indigo-50/50 dark:from-slate-950 dark:to-slate-900/70 min-h-screen py-8 px-4 sm:px-6 lg:px-8"
       }
     >
-      <h1 className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-gray-900 to-slate-800 bg-clip-text text-transparent mb-12 animate-fade-in-up">
+      <h1 className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-gray-900 to-slate-800 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-12 animate-fade-in-up">
         🛒 POS Scanner
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,420px)_1fr] gap-8 max-w-7xl mx-auto">
         {/* SCANNER CARD */}
-        <div className="stat-card bg-white/70 backdrop-blur-xl border border-white/30 shadow-2xl rounded-3xl p-8 hover:shadow-3xl transition-all duration-500 order-2 lg:order-1">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+        <div className="stat-card bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/30 dark:border-slate-700/40 shadow-2xl rounded-3xl p-8 hover:shadow-3xl transition-all duration-500 order-2 lg:order-1">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 flex items-center gap-3">
             📷 Scan Barcode
           </h2>
-          <div className="w-full h-96 lg:h-80 border-4 border-dashed border-gray-200/50 rounded-2xl overflow-hidden bg-gradient-to-b from-white/50 to-white/20 hover:border-emerald-300/50 transition-all duration-300">
+          <div className="w-full h-96 lg:h-80 border-4 border-dashed border-gray-200/50 dark:border-slate-700/40 rounded-2xl overflow-hidden bg-gradient-to-b from-white/50 to-white/20 dark:from-slate-900/50 dark:to-slate-900/70 hover:border-emerald-300/50 transition-all duration-300">
             <Scanner onScan={handleScan} />
           </div>
-          <p className="mt-6 text-sm text-gray-500 text-center animate-pulse">
+          <p className="mt-6 text-sm text-gray-500 dark:text-slate-400 text-center animate-pulse">
             Point camera at barcode
           </p>
         </div>
@@ -189,48 +189,50 @@ export default function ScanPage() {
           <div className="flex-1 overflow-y-auto mb-8 pr-2 -mr-2">
             {cart.length === 0 ? (
               <div className="text-center py-20">
-                <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg">
+                <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-800 dark:to-slate-900 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg">
                   <span className="text-3xl">🛒</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-500 mb-2">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Cart is empty
                 </h3>
-                <p className="text-gray-400">Scan products to get started</p>
+                <p className="text-gray-500 dark:text-slate-400">
+                  Scan products to get started
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {cart.map((item) => (
                   <div
                     key={item.id}
-                    className="group bg-white/60 backdrop-blur-sm hover:bg-white border border-gray-100/50 hover:border-emerald-200/50 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                    className="group bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-950/80 border border-gray-100/50 dark:border-slate-700/50 hover:border-emerald-200/50 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                   >
                     <div className="flex items-start lg:items-center justify-between gap-4 lg:gap-6">
                       {/* Product Info */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-lg text-gray-900 group-hover:text-emerald-700 truncate mb-1">
+                        <h4 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-emerald-700 truncate mb-1">
                           {item.name}
                         </h4>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-slate-400">
                           Unit: {formatVND(item.price)}
                         </p>
                       </div>
 
                       {/* Price */}
                       <div className="text-right hidden sm:block">
-                        <div className="text-2xl font-bold text-gray-900">
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
                           {formatVND(item.price * item.qty)}
                         </div>
-                        <div className="text-sm text-gray-500 line-through">
+                        <div className="text-sm text-gray-500 dark:text-slate-400 line-through">
                           {formatVND(item.price)}
                         </div>
                       </div>
 
                       {/* Qty Controls */}
                       <div className="flex items-center gap-3 ml-auto sm:ml-0">
-                        <div className="flex items-center bg-white/80 backdrop-blur rounded-xl p-2 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur rounded-xl p-2 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200">
                           <button
                             onClick={() => decreaseQty(item.id)}
-                            className="w-10 h-10 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 flex items-center justify-center text-gray-600 hover:text-gray-800 font-bold transition-all duration-200 hover:scale-110"
+                            className="w-10 h-10 rounded-lg border border-gray-300 dark:border-slate-700 hover:border-gray-400 dark:hover:border-slate-500 hover:bg-gray-50 dark:hover:bg-slate-800 flex items-center justify-center text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:hover:text-white font-bold transition-all duration-200 hover:scale-110"
                             disabled={item.qty <= 1}
                           >
                             −
@@ -245,18 +247,18 @@ export default function ScanPage() {
                               handleInputQty(item.id, e.target.value)
                             }
                             onWheel={(e) => e.target.blur()}
-                            className="w-20 text-center border-0 bg-transparent font-bold text-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2 py-1"
+                            className="w-20 text-center border-0 bg-transparent font-bold text-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2 py-1"
                           />
                           <button
                             onClick={() => increaseQty(item.id)}
-                            className="w-10 h-10 rounded-lg border border-gray-300 hover:border-emerald-400 hover:bg-emerald-50 flex items-center justify-center text-gray-600 hover:text-emerald-600 font-bold transition-all duration-200 hover:scale-110"
+                            className="w-10 h-10 rounded-lg border border-gray-300 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950 flex items-center justify-center text-gray-600 dark:text-slate-300 hover:text-emerald-600 font-bold transition-all duration-200 hover:scale-110"
                           >
                             +
                           </button>
                         </div>
 
                         {/* Mobile Price */}
-                        <div className="text-right sm:hidden text-lg font-bold text-gray-900">
+                        <div className="text-right sm:hidden text-lg font-bold text-gray-900 dark:text-white">
                           {formatVND(item.price * item.qty)}
                         </div>
 
@@ -286,12 +288,12 @@ export default function ScanPage() {
           </div>
 
           {/* TOTAL & CHECKOUT - STICKY */}
-          <div className="bg-white/90 backdrop-blur-xl border-t border-gray-200/50 pt-8 pb-2 rounded-2xl shadow-2xl sticky bottom-0 mt-auto">
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-gray-200/50 dark:border-slate-700/50 pt-8 pb-2 rounded-2xl shadow-2xl sticky bottom-0 mt-auto">
             <div className="flex items-center justify-between text-2xl font-black mb-6 px-2">
-              <span className="bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 dark:from-white dark:via-slate-300 dark:to-white bg-clip-text text-transparent">
                 Total
               </span>
-              <span className="text-emerald-700 min-w-[150px] text-right">
+              <span className="text-emerald-700 dark:text-emerald-300 min-w-[150px] text-right">
                 {formatVND(total)}
               </span>
             </div>

@@ -144,10 +144,12 @@ export default function Employees() {
                 <span className="text-white font-bold text-xl">👨‍💼</span>
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
                   Employee Management
                 </h1>
-                <p className="text-gray-500">Manage your team members</p>
+                <p className="text-gray-500 dark:text-slate-400">
+                  Manage your team members
+                </p>
               </div>
             </div>
           </div>
@@ -208,10 +210,10 @@ export default function Employees() {
           <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-gray-400 to-gray-500 rounded-xl flex items-center justify-center">
             <span className="text-2xl">🔒</span>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Access Denied
           </h2>
-          <p className="text-gray-500 max-w-md">
+          <p className="text-gray-500 dark:text-slate-400 max-w-md">
             Admin privileges required to manage employees.
           </p>
         </div>
@@ -229,10 +231,10 @@ export default function Employees() {
               <span className="text-white font-bold text-xl">👨‍💼</span>
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
                 Employee Management
               </h1>
-              <p className="text-gray-500 mt-1">
+              <p className="text-gray-500 dark:text-slate-400 mt-1">
                 {filteredUsers.length} of {users.length} employees
               </p>
             </div>
@@ -284,10 +286,10 @@ export default function Employees() {
             <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-2xl flex items-center justify-center">
               <span className="text-3xl">👥</span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               No employees found
             </h3>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            <p className="text-gray-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
               {searchTerm
                 ? "Try adjusting your search criteria."
                 : "Get started by clicking Add Employee."}
@@ -331,14 +333,14 @@ export default function Employees() {
                                 )}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="font-medium text-gray-900 truncate">
+                                <div className="font-medium text-gray-900 dark:text-white truncate">
                                   {u.email}
                                 </div>
                               </div>
                             </div>
                           </td>
 
-                          <td className="font-mono text-sm text-gray-900 truncate max-w-xs">
+                          <td className="font-mono text-sm text-gray-900 dark:text-slate-100 truncate max-w-xs">
                             {u.email}
                           </td>
 
@@ -355,7 +357,7 @@ export default function Employees() {
                             </select>
                           </td>
 
-                          <td className="text-sm text-gray-500">
+                          <td className="text-sm text-gray-500 dark:text-slate-400">
                             {new Date(u.created_at).toLocaleDateString()}
                           </td>
 
@@ -426,7 +428,7 @@ export default function Employees() {
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <div className="text-gray-500 uppercase text-xs font-medium tracking-wide mb-1">
+                        <div className="text-gray-500 dark:text-slate-400 uppercase text-xs font-medium tracking-wide mb-1">
                           Role
                         </div>
                         <select
@@ -440,18 +442,18 @@ export default function Employees() {
                         </select>
                       </div>
                       <div>
-                        <div className="text-gray-500 uppercase text-xs font-medium tracking-wide mb-1">
+                        <div className="text-gray-500 dark:text-slate-400 uppercase text-xs font-medium tracking-wide mb-1">
                           Email
                         </div>
-                        <div className="font-mono break-all text-gray-900">
+                        <div className="font-mono break-all text-gray-900 dark:text-slate-100">
                           {u.email}
                         </div>
                       </div>
                       <div>
-                        <div className="text-gray-500 uppercase text-xs font-medium tracking-wide mb-1">
+                        <div className="text-gray-500 dark:text-slate-400 uppercase text-xs font-medium tracking-wide mb-1">
                           Joined
                         </div>
-                        <div className="text-sm font-medium">
+                        <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
                           {new Date(u.created_at).toLocaleDateString()}
                         </div>
                       </div>

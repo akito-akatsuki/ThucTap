@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
@@ -22,6 +23,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script id="theme-script" strategy="beforeInteractive">
+          {`(function() {
+            var media = window.matchMedia('(prefers-color-scheme: dark)');
+            var apply = function(event) {
+              var isDark = event.matches !== undefined ? event.matches : media.matches;
+              document.documentElement.classList.toggle('dark', isDark);
+            };
+            apply(media);
+            if (media.addEventListener) {
+              media.addEventListener('change', apply);
+            } else if (media.addListener) {
+              media.addListener(apply);
+            }
+          })();`}
+        </Script>
         <Navbar />
         <Toaster position="top-right" />
         {children}

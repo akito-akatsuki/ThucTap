@@ -332,7 +332,7 @@ export default function Dashboard() {
             <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-500 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
               📦 Inventory Dashboard
             </h1>
-            <p className="text-gray-500 mt-2 text-lg">
+            <p className="text-gray-500 dark:text-slate-300 mt-2 text-lg">
               Manage products, stock & revenue in real-time
             </p>
           </div>
@@ -382,8 +382,12 @@ export default function Dashboard() {
             >
               {item.icon}
             </div>
-            <div className="text-gray-500 text-sm">{item.title}</div>
-            <div className="text-2xl font-bold mt-1">{item.value}</div>
+            <div className="text-gray-500 dark:text-slate-400 text-sm">
+              {item.title}
+            </div>
+            <div className="text-2xl font-bold mt-1 dark:text-white">
+              {item.value}
+            </div>
           </div>
         ))}
       </div>
@@ -505,13 +509,13 @@ export default function Dashboard() {
           </select>
           {/* SEARCH */}
           <div className="relative w-full md:w-72">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
 
             <input
               placeholder="Search products..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-10 py-2 rounded-xl border border-gray-200 bg-white/80 dark:bg-white/10 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full pl-12 pr-10 py-2 rounded-xl border border-gray-200 bg-white/80 dark:bg-white/10 focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white"
             />
 
             {/* CLEAR BUTTON */}
@@ -538,8 +542,10 @@ export default function Dashboard() {
               >
                 {/* LEFT */}
                 <div>
-                  <div className="font-bold text-lg">{p.name}</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="font-bold text-lg dark:text-white">
+                    {p.name}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-slate-400">
                     {p.categories?.name || "-"}
                   </div>
                 </div>
@@ -596,7 +602,7 @@ export default function Dashboard() {
           })}
 
           {filteredProducts.length === 0 && (
-            <div className="text-center py-10 text-gray-500">
+            <div className="text-center py-10 text-gray-500 dark:text-slate-400">
               No products found
             </div>
           )}

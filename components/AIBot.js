@@ -69,17 +69,23 @@ export default function AIBot() {
       {/* CHAT BOX */}
 
       {open && (
-        <div style={chatBox}>
-          <div style={chatHeader}>
+        <div className="fixed bottom-24 right-5 w-[320px] bg-white dark:bg-slate-900 rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.2)] overflow-hidden z-50">
+          <div className="flex items-center justify-between bg-blue-600 dark:bg-blue-500 text-white px-4 py-3 font-bold">
             AI Inventory Alerts
-            <button onClick={() => setOpen(false)} style={closeBtn}>
+            <button
+              onClick={() => setOpen(false)}
+              className="bg-transparent border-none text-white cursor-pointer"
+            >
               ✕
             </button>
           </div>
 
-          <div style={chatBody}>
+          <div className="p-3 max-h-[220px] overflow-y-auto bg-slate-50 dark:bg-slate-950">
             {messages.map((m, i) => (
-              <div key={i} style={message}>
+              <div
+                key={i}
+                className="bg-slate-100 dark:bg-slate-700 rounded-xl px-3 py-2 mb-2 text-sm text-slate-700 dark:text-slate-100"
+              >
                 🤖 {m}
               </div>
             ))}
@@ -89,67 +95,12 @@ export default function AIBot() {
 
       {/* BOT BUTTON */}
 
-      <button onClick={() => setOpen(!open)} style={botButton}>
+      <button
+        className="fixed bottom-5 right-5 w-14 h-14 rounded-full bg-blue-600 dark:bg-blue-500 text-white text-2xl border-none cursor-pointer shadow-[0_4px_10px_rgba(0,0,0,0.2)]"
+        onClick={() => setOpen(!open)}
+      >
         🤖
       </button>
     </>
   );
 }
-
-/* STYLE */
-
-const botButton = {
-  position: "fixed",
-  bottom: 20,
-  right: 20,
-  width: 60,
-  height: 60,
-  borderRadius: "50%",
-  background: "#2563eb",
-  color: "white",
-  fontSize: 26,
-  border: "none",
-  cursor: "pointer",
-  boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-};
-
-const chatBox = {
-  position: "fixed",
-  bottom: 90,
-  right: 20,
-  width: 320,
-  background: "white",
-  borderRadius: 10,
-  boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
-  overflow: "hidden",
-};
-
-const chatHeader = {
-  background: "#2563eb",
-  color: "white",
-  padding: 12,
-  fontWeight: "bold",
-  display: "flex",
-  justifyContent: "space-between",
-};
-
-const chatBody = {
-  padding: 12,
-  maxHeight: 220,
-  overflowY: "auto",
-};
-
-const message = {
-  background: "#f1f5f9",
-  padding: 8,
-  borderRadius: 6,
-  marginBottom: 6,
-  fontSize: 14,
-};
-
-const closeBtn = {
-  background: "transparent",
-  border: "none",
-  color: "white",
-  cursor: "pointer",
-};

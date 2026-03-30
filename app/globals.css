@@ -25,6 +25,29 @@
   --gradient-red: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f0f23;
+    --card: #1a1a2e;
+    --glass: rgba(26, 26, 46, 0.4);
+    --glass-border: rgba(148, 163, 184, 0.2);
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --border-subtle: #1e293b;
+  }
+
+  body {
+    color-scheme: dark;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    color-scheme: light;
+  }
+}
+
 /* DARK MODE */
 .dark {
   --bg: #0f0f23;

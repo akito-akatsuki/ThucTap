@@ -50,11 +50,17 @@ type Log = {
    COMPONENTS
 ========================= */
 const KPICard = ({ title, value, subValue, icon: Icon, color }: any) => (
-  <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-start justify-between">
+  <div className="bg-white dark:bg-slate-900 dark:border-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-start justify-between">
     <div>
-      <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-      <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
-      <p className="text-xs text-gray-400 mt-1">{subValue}</p>
+      <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">
+        {title}
+      </p>
+      <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+        {value}
+      </h3>
+      <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+        {subValue}
+      </p>
     </div>
     <div className={`p-3 rounded-2xl ${color}`}>
       <Icon className="w-6 h-6 text-white" />
@@ -65,7 +71,7 @@ const KPICard = ({ title, value, subValue, icon: Icon, color }: any) => (
 const QuickAction = ({ title, desc, icon: Icon, color, onClick }: any) => (
   <button
     onClick={onClick}
-    className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 bg-white hover:border-blue-500 hover:shadow-md transition-all text-left w-full group"
+    className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 bg-white dark:bg-slate-900 dark:border-slate-700 hover:border-blue-500 hover:shadow-md transition-all text-left w-full group"
   >
     <div
       className={`p-3 rounded-xl ${color} text-white group-hover:scale-110 transition-transform`}
@@ -73,10 +79,10 @@ const QuickAction = ({ title, desc, icon: Icon, color, onClick }: any) => (
       <Icon className="w-5 h-5" />
     </div>
     <div className="flex-1">
-      <p className="font-bold text-gray-900 text-sm">{title}</p>
-      <p className="text-xs text-gray-500">{desc}</p>
+      <p className="font-bold text-gray-900 dark:text-white text-sm">{title}</p>
+      <p className="text-xs text-gray-500 dark:text-slate-400">{desc}</p>
     </div>
-    <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+    <ArrowRight className="w-4 h-4 text-gray-300 dark:text-slate-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
   </button>
 );
 
@@ -97,15 +103,15 @@ function CategoryDropdown({
 
   return (
     <div className="relative w-full md:w-[280px]">
-      <label className="text-sm font-medium text-gray-600 mb-1.5 block">
+      <label className="text-sm font-medium text-gray-600 dark:text-slate-400 mb-1.5 block">
         Lọc theo danh mục:
       </label>
       <div
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-between border border-gray-200 px-4 py-3 rounded-xl cursor-pointer bg-white hover:border-blue-300 transition-colors shadow-sm"
+        className="flex items-center justify-between border border-gray-200 dark:border-slate-700 px-4 py-3 rounded-xl cursor-pointer bg-white dark:bg-slate-900 hover:border-blue-300 transition-colors shadow-sm"
       >
         <span
-          className={`${selected ? "text-gray-900" : "text-gray-500"} text-base font-medium`}
+          className={`${selected ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-slate-500"} text-base font-medium`}
         >
           {selected?.name || "Tất cả danh mục"}
         </span>
@@ -115,7 +121,7 @@ function CategoryDropdown({
       </div>
 
       <div
-        className={`absolute left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl transition-all duration-300 origin-top z-50 overflow-hidden ${
+        className={`absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-2xl shadow-2xl transition-all duration-300 origin-top z-50 overflow-hidden ${
           open
             ? "opacity-100 scale-y-100 translate-y-0"
             : "opacity-0 scale-y-0 -translate-y-2 pointer-events-none"
@@ -126,7 +132,7 @@ function CategoryDropdown({
             onChange("");
             setOpen(false);
           }}
-          className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-gray-700 font-medium"
+          className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer text-gray-700 dark:text-slate-200 font-medium"
         >
           Tất cả danh mục
         </div>
@@ -138,7 +144,7 @@ function CategoryDropdown({
               onChange(c.id);
               setOpen(false);
             }}
-            className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-gray-800"
+            className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer text-gray-800 dark:text-slate-200"
           >
             {c.name}
           </div>
@@ -174,15 +180,15 @@ function MonthDropdown({
 
   return (
     <div className="relative w-full md:w-32">
-      <label className="text-xs font-medium text-gray-600 mb-1 block">
+      <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">
         Tháng
       </label>
       <div
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-between border border-gray-200 px-3 py-2 rounded-xl cursor-pointer bg-white hover:border-emerald-300 transition-colors shadow-sm text-sm"
+        className="flex items-center justify-between border border-gray-200 dark:border-slate-700 px-3 py-2 rounded-xl cursor-pointer bg-white dark:bg-slate-900 hover:border-emerald-300 transition-colors shadow-sm text-sm"
       >
         <span
-          className={`${value ? "text-gray-900" : "text-gray-500"} font-medium`}
+          className={`${value ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-slate-500"} font-medium`}
         >
           {selected || "Chọn"}
         </span>
@@ -191,7 +197,7 @@ function MonthDropdown({
         />
       </div>
       <div
-        className={`absolute left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl transition-all duration-300 origin-top z-50 overflow-hidden ${open ? "opacity-100 scale-y-100 translate-y-0" : "opacity-0 scale-y-95 -translate-y-1 pointer-events-none"}`}
+        className={`absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl transition-all duration-300 origin-top z-50 overflow-hidden ${open ? "opacity-100 scale-y-100 translate-y-0" : "opacity-0 scale-y-95 -translate-y-1 pointer-events-none"}`}
       >
         {monthNames.map((name, index) => (
           <div
@@ -200,7 +206,7 @@ function MonthDropdown({
               onChange(index + 1);
               setOpen(false);
             }}
-            className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-gray-800 text-sm"
+            className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer text-gray-800 dark:text-slate-200 text-sm"
           >
             {name}
           </div>
@@ -226,24 +232,24 @@ function YearDropdown({
 
   return (
     <div className="relative w-full md:w-32">
-      <label className="text-xs font-medium text-gray-600 mb-1 block">
+      <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">
         Năm
       </label>
       <div
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-between border border-gray-200 px-3 py-2 rounded-xl cursor-pointer bg-white hover:border-indigo-300 transition-colors shadow-sm text-sm"
+        className="flex items-center justify-between border border-gray-200 dark:border-slate-700 px-3 py-2 rounded-xl cursor-pointer bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-500 transition-colors shadow-sm text-sm"
       >
         <span
-          className={`${selected ? "text-gray-900" : "text-gray-500"} font-medium`}
+          className={`${selected ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-slate-500"} font-medium`}
         >
           {selected || "Chọn"}
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`w-4 h-4 text-gray-400 dark:text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </div>
       <div
-        className={`absolute left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl transition-all duration-300 origin-top z-50 overflow-hidden ${open ? "opacity-100 scale-y-100 translate-y-0" : "opacity-0 scale-y-95 -translate-y-1 pointer-events-none"}`}
+        className={`absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl transition-all duration-300 origin-top z-50 overflow-hidden ${open ? "opacity-100 scale-y-100 translate-y-0" : "opacity-0 scale-y-95 -translate-y-1 pointer-events-none"}`}
       >
         {years.map((year) => (
           <div
@@ -252,7 +258,7 @@ function YearDropdown({
               onChange(year);
               setOpen(false);
             }}
-            className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-gray-800 text-sm"
+            className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer text-gray-800 dark:text-slate-200 text-sm"
           >
             {year}
           </div>
@@ -268,8 +274,8 @@ function YearDropdown({
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/90 p-5 rounded-2xl shadow-2xl border border-gray-100 backdrop-blur-sm min-w-[220px]">
-        <p className="text-sm font-bold text-gray-950 mb-3 border-b pb-2">
+      <div className="bg-white/90 dark:bg-slate-900/95 p-5 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 backdrop-blur-sm min-w-[220px]">
+        <p className="text-sm font-bold text-gray-950 dark:text-white mb-3 border-b pb-2">
           {label}
         </p>
         {payload.map((item: any) => (
@@ -279,13 +285,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
               className="w-3 h-3 rounded-full flex-shrink-0"
             />
             <p
-              className="text-sm font-medium text-gray-800 truncate"
+              className="text-sm font-medium text-gray-800 dark:text-slate-200 truncate"
               title={item.name}
             >
               {item.name}:
             </p>
-            <p className="text-sm font-bold text-gray-950 ml-auto">
-              {item.value} <span className="font-medium text-gray-500">SP</span>
+            <p className="text-sm font-bold text-gray-950 dark:text-white ml-auto">
+              {item.value}{" "}
+              <span className="font-medium text-gray-500 dark:text-slate-400">
+                SP
+              </span>
             </p>
           </div>
         ))}
@@ -501,17 +510,17 @@ export default function Home() {
       RENDER MAIN UI
   ========================= */
   return (
-    <main className="min-h-screen bg-[#F8FAFC] p-6 md:p-10 font-sans">
+    <main className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 dark:text-slate-100 p-6 md:p-10 font-sans">
       <div className="max-w-[1600px] mx-auto space-y-8">
         {/* KPI */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">
+                <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">
                   Monthly Revenue
                 </p>
-                <h3 className="text-2xl font-bold text-gray-900">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                   {loadingRevenue ? "Loading..." : revenueMonthly}
                 </h3>
 
@@ -563,11 +572,11 @@ export default function Home() {
           {/* LEFT */}
           <div className="xl:col-span-2 space-y-8">
             {/* AI SALES STRATEGY */}
-            <div className="bg-white shadow-sm rounded-[32px] p-8 border border-gray-100">
+            <div className="bg-white dark:bg-slate-900 shadow-sm rounded-[32px] p-8 border border-gray-100 dark:border-slate-700">
               <div className="flex justify-between items-center mb-8">
                 <div className="flex items-center gap-3">
                   <Zap className="w-6 h-6 text-yellow-500 fill-yellow-500" />
-                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
                     AI Sales Strategy
                   </h2>
                 </div>
@@ -625,8 +634,8 @@ export default function Home() {
             </div>
 
             {/* TOP PRODUCTS */}
-            <div className="bg-white shadow-sm rounded-[32px] p-8 border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-6">
+            <div className="bg-white dark:bg-slate-900 shadow-sm rounded-[32px] p-8 border border-gray-100 dark:border-slate-700">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
                 Top Potential Products
               </h3>
 
@@ -634,15 +643,17 @@ export default function Home() {
                 {topProducts.map((p, i) => (
                   <div
                     key={p.id}
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100"
+                    className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-slate-950 rounded-2xl border border-gray-100 dark:border-slate-800"
                   >
                     <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center font-bold text-blue-600">
                       #{i + 1}
                     </div>
 
                     <div className="flex-1">
-                      <p className="font-bold text-sm">{p.name}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="font-bold text-sm text-gray-900 dark:text-white">
+                        {p.name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">
                         Speed: {p.speed} items/day
                       </p>
                     </div>
@@ -655,23 +666,23 @@ export default function Home() {
           {/* RIGHT */}
           <div className="space-y-8">
             {/* INVENTORY HEALTH */}
-            <div className="bg-white shadow-sm rounded-[32px] p-8 border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-6">
+            <div className="bg-white dark:bg-slate-900 shadow-sm rounded-[32px] p-8 border border-gray-100 dark:border-slate-700">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
                 Inventory Health
               </h3>
 
               <div className="space-y-4">
-                <div className="flex justify-between p-4 bg-emerald-50 rounded-2xl text-emerald-700">
+                <div className="flex justify-between p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl text-emerald-700 dark:text-emerald-200">
                   <span>Stable</span>
                   <span className="font-bold">12</span>
                 </div>
 
-                <div className="flex justify-between p-4 bg-orange-50 rounded-2xl text-orange-700">
+                <div className="flex justify-between p-4 bg-orange-50 dark:bg-orange-500/10 rounded-2xl text-orange-700 dark:text-orange-200">
                   <span>Warning</span>
                   <span className="font-bold">5</span>
                 </div>
 
-                <div className="flex justify-between p-4 bg-red-50 rounded-2xl text-red-700">
+                <div className="flex justify-between p-4 bg-red-50 dark:bg-red-500/10 rounded-2xl text-red-700 dark:text-red-200">
                   <span>Critical</span>
                   <span className="font-bold">2</span>
                 </div>
@@ -680,9 +691,9 @@ export default function Home() {
 
             {/* RECENT LOGS */}
             {/* RECENT LOGS */}
-            <div className="bg-white shadow-sm rounded-[32px] p-8 border border-gray-100">
+            <div className="bg-white dark:bg-slate-900 shadow-sm rounded-[32px] p-8 border border-gray-100 dark:border-slate-700">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                   Inventory Logs
                 </h3>
                 <button
@@ -696,9 +707,9 @@ export default function Home() {
                 {groupedLogs.map((log) => (
                   <div
                     key={log.invoice_id}
-                    className="text-xs p-3 bg-gray-50 rounded-xl"
+                    className="text-xs p-3 bg-gray-50 dark:bg-slate-950 rounded-xl"
                   >
-                    <div className="font-mono font-bold text-sm mb-1">
+                    <div className="font-mono font-bold text-sm text-gray-900 dark:text-white mb-1">
                       {log.invoice_id?.slice(0, 8) || "N/A"}
                     </div>
 
@@ -706,15 +717,15 @@ export default function Home() {
                       <span
                         className={`px-2 py-1 rounded-full font-bold ${
                           log.type === "export"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-green-100 text-green-800"
+                            ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200"
+                            : "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200"
                         }`}
                       >
                         {log.type?.toUpperCase()}
                       </span>
 
                       {/* ✅ THAY ĐỔI Ở ĐÂY: Dùng log.user thay vì log.created_by */}
-                      <span className="text-gray-500 font-medium">
+                      <span className="text-gray-500 dark:text-slate-300 font-medium">
                         {log.user}
                       </span>
                     </div>

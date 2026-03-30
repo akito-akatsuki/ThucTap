@@ -189,7 +189,7 @@ export default function Navbar() {
   return (
     <nav
       ref={navRef}
-      className="sticky top-0 z-[100] w-full border-b border-gray-100 bg-white/80 backdrop-blur-md px-4 sm:px-8"
+      className="sticky top-0 z-[100] w-full border-b border-gray-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-8"
     >
       <div className="max-w-[1500px] mx-auto flex h-20 items-center justify-between">
         {/* LOGO */}
@@ -197,7 +197,7 @@ export default function Navbar() {
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:rotate-6 transition-transform">
             <span className="text-white text-xl">🤖</span>
           </div>
-          <span className="text-xl font-black text-gray-900 tracking-tighter hidden sm:block">
+          <span className="text-xl font-black text-gray-900 dark:text-slate-100 tracking-tighter hidden sm:block">
             INVENTORY<span className="text-blue-600">AI</span>
           </span>
         </Link>
@@ -213,8 +213,8 @@ export default function Navbar() {
                 data-path={item.href}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
                   isActive
-                    ? "text-blue-600"
-                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-900"
                 }`}
               >
                 {item.icon}
@@ -257,7 +257,7 @@ export default function Navbar() {
                   {/* Login Form */}
                   <div
                     ref={loginFormRef}
-                    className="absolute right-0 top-full mt-3 w-96 bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 p-8 z-[60] opacity-0 translate-y-4 scale-95 origin-top-right"
+                    className="absolute right-0 top-full mt-3 w-96 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 dark:border-slate-700 p-8 z-[60] opacity-0 translate-y-4 scale-95 origin-top-right"
                     style={{
                       transform: showLoginForm
                         ? "translateY(0) scale(1)"
@@ -270,12 +270,12 @@ export default function Navbar() {
                     }}
                   >
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-xl font-black text-gray-900">
+                      <h3 className="text-xl font-black text-gray-900 dark:text-slate-100">
                         Đăng nhập
                       </h3>
                       <button
                         onClick={closeLoginForm}
-                        className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                       >
                         <X size={20} />
                       </button>
@@ -283,21 +283,21 @@ export default function Navbar() {
 
                     <form onSubmit={handleEmailLogin} className="space-y-4">
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                        <label className="block text-sm font-bold text-gray-700 dark:text-slate-200 mb-2">
                           Email
                         </label>
                         <input
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-sm font-medium"
+                          className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm font-medium text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                           placeholder="Nhập email của bạn"
                           required
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                        <label className="block text-sm font-bold text-gray-700 dark:text-slate-200 mb-2">
                           Mật khẩu
                         </label>
                         <div className="relative">
@@ -305,14 +305,14 @@ export default function Navbar() {
                             type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-sm font-medium"
+                            className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm font-medium text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             placeholder="Nhập mật khẩu"
                             required
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 transition-colors"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-100 p-1 transition-colors"
                           >
                             {showPassword ? (
                               <EyeOff size={18} />
@@ -324,8 +324,8 @@ export default function Navbar() {
                       </div>
 
                       {loginError && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
-                          <p className="text-sm text-red-700 font-medium">
+                        <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl">
+                          <p className="text-sm text-red-700 dark:text-red-200 font-medium">
                             {loginError}
                           </p>
                         </div>
@@ -341,10 +341,10 @@ export default function Navbar() {
 
                     <div className="relative my-6">
                       <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-200" />
+                        <div className="w-full border-t border-gray-200 dark:border-slate-700" />
                       </div>
                       <div className="relative flex justify-center text-xs uppercase">
-                        <span className="px-4 bg-white text-gray-500 font-bold">
+                        <span className="px-4 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400 font-bold">
                           Hoặc
                         </span>
                       </div>
@@ -352,7 +352,7 @@ export default function Navbar() {
 
                     <button
                       onClick={googleLogin}
-                      className="w-full py-3.5 px-6 border-2 border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 font-bold rounded-2xl hover:bg-gray-50 hover:border-blue-300 hover:shadow-xl hover:shadow-white/20 transition-all duration-300 active:scale-95 shadow-lg shadow-gray-100 flex items-center justify-center gap-3 text-sm"
+                      className="w-full py-3.5 px-6 border-2 border-gray-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm text-gray-900 dark:text-slate-100 font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-950 hover:border-blue-300 hover:shadow-xl hover:shadow-white/20 transition-all duration-300 active:scale-95 shadow-lg shadow-gray-100 dark:shadow-none flex items-center justify-center gap-3 text-sm"
                     >
                       <span className="w-5 h-5 bg-[url('https://cdn-icons-png.flaticon.com/32/281/281764.png')] bg-cover bg-center bg-no-repeat" />
                       Đăng nhập với Google
@@ -362,7 +362,7 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-4 bg-gray-50 p-1.5 pr-4 rounded-2xl border border-gray-100">
+            <div className="flex items-center gap-4 bg-gray-50 dark:bg-slate-900 p-1.5 pr-4 rounded-2xl border border-gray-100 dark:border-slate-700">
               {avatar ? (
                 <img
                   src={avatar}
@@ -370,23 +370,23 @@ export default function Navbar() {
                   className="w-9 h-9 rounded-xl object-cover"
                 />
               ) : (
-                <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300 flex items-center justify-center font-bold">
                   {user.email?.charAt(0).toUpperCase()}
                 </div>
               )}
 
               <div className="hidden lg:block leading-tight">
-                <p className="text-xs font-bold text-gray-900 truncate max-w-[120px]">
+                <p className="text-xs font-bold text-gray-900 dark:text-slate-100 truncate max-w-[120px]">
                   {user.user_metadata?.full_name || "User"}
                 </p>
-                <p className="text-[10px] text-gray-400 font-medium">
+                <p className="text-[10px] text-gray-400 dark:text-slate-400 font-medium">
                   {role || "Member"}
                 </p>
               </div>
 
               <button
                 onClick={logout}
-                className="ml-2 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                className="ml-2 p-2 text-gray-400 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition-colors"
               >
                 <LogOut size={18} />
               </button>
@@ -395,7 +395,7 @@ export default function Navbar() {
 
           {/* MOBILE BUTTON */}
           <button
-            className="md:hidden p-2 text-gray-600"
+            className="md:hidden p-2 text-gray-600 dark:text-slate-300"
             onClick={() => setOpen(!open)}
           >
             {open ? <X size={28} /> : <Menu size={28} />}
@@ -405,7 +405,7 @@ export default function Navbar() {
 
       {/* MOBILE MENU */}
       {open && (
-        <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-gray-100 p-4 space-y-2 shadow-xl">
+        <div className="md:hidden absolute top-20 left-0 w-full bg-white dark:bg-slate-950 border-b border-gray-100 dark:border-slate-800 p-4 space-y-2 shadow-xl">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -413,29 +413,8 @@ export default function Navbar() {
               onClick={() => setOpen(false)}
               className={`flex items-center gap-3 p-4 rounded-2xl font-bold ${
                 pathname === item.href
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-600"
-              }`}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {/* MOBILE MENU */}
-      {open && (
-        <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-gray-100 p-4 space-y-2 shadow-xl">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 p-4 rounded-2xl font-bold ${
-                pathname === item.href
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-600"
+                  ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-300"
+                  : "text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-900"
               }`}
             >
               {item.icon}

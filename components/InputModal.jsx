@@ -49,7 +49,7 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
           qty: Number(qty),
         });
 
-        onClose(); // 🔥 đóng ngay
+        onClose();
       } catch (err) {
         console.log(err);
         toast.error("Import failed");
@@ -91,31 +91,26 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
   };
 
   return (
-    <div style={overlay}>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <form
-        style={modal}
+        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl p-8 w-[320px] flex flex-col gap-4 shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
         }}
       >
-        <h3>{type === "edit" ? "Edit Product" : "Import Stock"}</h3>
+        <h3 className="text-xl font-semibold">
+          {type === "edit" ? "Edit Product" : "Import Stock"}
+        </h3>
 
         {/* EDIT FORM */}
         {type === "edit" && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "100px 1fr",
-              gap: "12px 10px",
-              alignItems: "center",
-            }}
-          >
+          <div className="grid grid-cols-[100px_1fr] gap-3 items-center">
             <span>Name:</span>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={input}
+              className="w-full rounded-xl border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-slate-900 dark:text-white"
             />
 
             <span>Price:</span>
@@ -123,7 +118,7 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
               type="number"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              style={input}
+              className="w-full rounded-xl border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-slate-900 dark:text-white"
             />
 
             <span>Min stock:</span>
@@ -131,14 +126,14 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
               type="number"
               value={minStock}
               onChange={(e) => setMinStock(e.target.value)}
-              style={input}
+              className="w-full rounded-xl border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-slate-900 dark:text-white"
             />
 
             <span>Category:</span>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              style={input}
+              className="w-full rounded-xl border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-slate-900 dark:text-white"
             >
               <option value="">Select category</option>
               {categories.map((c) => (
@@ -157,18 +152,26 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
             placeholder="Quantity"
             value={qty}
             onChange={(e) => setQty(e.target.value)}
-            style={input}
+            className="w-full rounded-xl border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-slate-900 dark:text-white"
             autoFocus
           />
         )}
 
         {/* ACTIONS */}
-        <div style={actions}>
-          <button type="submit" style={saveBtn} disabled={loading}>
+        <div className="flex gap-3 mt-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 rounded-xl bg-blue-600 text-white py-3 font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+          >
             {loading ? "Saving..." : "Save"}
           </button>
 
-          <button type="button" onClick={onClose} style={cancelBtn}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-xl bg-slate-400 text-white py-3 font-semibold hover:bg-slate-500 transition"
+          >
             Cancel
           </button>
         </div>
@@ -176,56 +179,3 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
     </div>
   );
 }
-
-/* STYLE */
-
-const overlay = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,0.4)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 999,
-};
-
-const modal = {
-  background: "white",
-  padding: 30,
-  borderRadius: 10,
-  width: 320,
-  display: "flex",
-  flexDirection: "column",
-  gap: 10,
-};
-
-const input = {
-  width: "100%",
-  padding: "8px 10px",
-  borderRadius: "6px",
-  border: "1px solid #ccc",
-};
-
-const actions = {
-  display: "flex",
-  gap: 10,
-  marginTop: 10,
-};
-
-const saveBtn = {
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  padding: "8px 12px",
-  borderRadius: 6,
-  cursor: "pointer",
-};
-
-const cancelBtn = {
-  background: "#aaa",
-  color: "white",
-  border: "none",
-  padding: "8px 12px",
-  borderRadius: 6,
-  cursor: "pointer",
-};
