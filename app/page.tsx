@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { formatVND } from "@/app/utils/currency";
 import { useRouter } from "next/navigation";
 import {
@@ -100,9 +100,30 @@ function CategoryDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const selected = categories.find((c) => c.id === value);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        open &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [open]);
 
   return (
-    <div className="relative w-full md:w-[280px]">
+    <div ref={dropdownRef} className="relative w-full md:w-[280px]">
       <label className="text-sm font-medium text-gray-600 dark:text-slate-400 mb-1.5 block">
         Lọc theo danh mục:
       </label>
