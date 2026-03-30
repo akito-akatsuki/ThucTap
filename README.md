@@ -139,7 +139,7 @@ npm run dev
 Mở trình duyệt tại:
 
 ```
-[(https://thuc-tap-cn.vercel.app]
+https://thuc-tap-cn.vercel.app
 ```
 
 ---
