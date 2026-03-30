@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import ConfirmModal from "@/components/ConfirmModal";
+import EmployeeAddModal from "@/components/EmployeeAddModal";
 
 export default function Employees() {
   const [users, setUsers] = useState([]);
@@ -10,7 +11,7 @@ export default function Employees() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterRole, setFilterRole] = useState("all");
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -21,10 +22,9 @@ export default function Employees() {
       const matchesSearch = u.email
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
-      const matchesFilter = filterRole === "all" || u.role === filterRole;
-      return matchesSearch && matchesFilter;
+      return matchesSearch;
     });
-  }, [users, searchTerm, filterRole]);
+  }, [users, searchTerm]);
 
   useEffect(() => {
     init();
@@ -78,6 +78,31 @@ export default function Employees() {
 
     if (json.error) {
       alert(json.error);
+      return;
+    }
+
+    loadUsers();
+  };
+
+  const addEmployee = async ({ name, email, password }) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const json = await res.json();
+
+    if (json.error) {
+      throw new Error(json.error);
       return;
     }
 
@@ -198,7 +223,7 @@ export default function Employees() {
     <div className="dashboard-page">
       <div className="dashboard-card">
         {/* Header */}
-        <div className="dashboard-card-header">
+        <div className="dashboard-card-header flex items-center gap-3 mb-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
               <span className="text-white font-bold text-xl">👨‍💼</span>
@@ -212,12 +237,22 @@ export default function Employees() {
               </p>
             </div>
           </div>
+
+          {/* Add Employee Button at Top Right */}
+          <div className="ml-auto">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm"
+            >
+              <span className="text-xl">+</span>
+              Add Employee
+            </button>
+          </div>
         </div>
 
-        {/* Controls */}
+        {/* Search */}
         <div className="flex flex-col lg:flex-row gap-4 mb-8 p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border border-gray-100 dark:border-gray-700">
           <div className="relative flex-1 group">
-            {/* Icon Container: Fix lỗi đè chữ bằng cách dùng absolute căn giữa */}
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <svg
                 className="w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors"
@@ -233,8 +268,6 @@ export default function Employees() {
                 />
               </svg>
             </div>
-
-            {/* Input: pl-12 để đẩy chữ qua phải nhường chỗ cho icon */}
             <input
               type="text"
               placeholder="Search employees by email..."
@@ -243,37 +276,9 @@ export default function Employees() {
               className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-medium text-gray-700 dark:text-gray-200"
             />
           </div>
-
-          {/* Role Filter: Đồng bộ UI với thanh search */}
-          <div className="relative w-full lg:w-48">
-            <select
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none appearance-none cursor-pointer font-medium text-gray-700 dark:text-gray-200"
-            >
-              <option value="all">All Roles</option>
-              <option value="admin">Admins</option>
-              <option value="seller">Sellers</option>
-            </select>
-            {/* Custom mũi tên cho select */}
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
-          </div>
         </div>
-        {/* Table / Cards */}
+
+        {/* Table */}
         {filteredUsers.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-2xl flex items-center justify-center">
@@ -283,9 +288,9 @@ export default function Employees() {
               No employees found
             </h3>
             <p className="text-gray-500 mb-6 max-w-md mx-auto">
-              {searchTerm || filterRole !== "all"
-                ? "Try adjusting your search or filter criteria."
-                : "Get started by adding your first employee."}
+              {searchTerm
+                ? "Try adjusting your search criteria."
+                : "Get started by clicking Add Employee."}
             </p>
           </div>
         ) : (
@@ -337,28 +342,25 @@ export default function Employees() {
                             {u.email}
                           </td>
 
+                          {/* Role Dropdown */}
                           <td>
-                            <div
-                              className={`status-badge ${roleColor} px-3 py-1`}
+                            <select
+                              value={u.role}
+                              disabled={isMe}
+                              onChange={(e) => changeRole(u.id, e.target.value)}
+                              className={`${roleColor} form-input text-sm px-3 py-1.5 rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed`}
                             >
-                              {u.role.toUpperCase()}
-                            </div>
+                              <option value="admin">Admin</option>
+                              <option value="staff">Staff</option>
+                            </select>
                           </td>
 
                           <td className="text-sm text-gray-500">
                             {new Date(u.created_at).toLocaleDateString()}
                           </td>
 
-                          <td className="space-x-2">
-                            <select
-                              value={u.role}
-                              disabled={isMe}
-                              onChange={(e) => changeRole(u.id, e.target.value)}
-                              className="form-input text-sm px-3 py-1.5 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              <option value="admin">Admin</option>
-                              <option value="seller">Seller</option>
-                            </select>
+                          {/* Only Delete */}
+                          <td>
                             <button
                               className="btn-danger text-sm px-3 py-1.5 !shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                               disabled={isMe}
@@ -427,21 +429,14 @@ export default function Employees() {
                         <div className="text-gray-500 uppercase text-xs font-medium tracking-wide mb-1">
                           Role
                         </div>
-                        <div
-                          className={`status-badge ${roleColor} px-3 py-1 inline-block`}
-                        >
-                          {u.role.toUpperCase()}
-                        </div>
-                      </div>
-                      <div className="select-container relative">
                         <select
                           value={u.role}
                           disabled={isMe}
                           onChange={(e) => changeRole(u.id, e.target.value)}
-                          className="form-input text-sm w-full pr-8 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          className={`${roleColor} form-input text-sm w-full pr-8 rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed`}
                         >
                           <option value="admin">Admin</option>
-                          <option value="seller">Seller</option>
+                          <option value="staff">Staff</option>
                         </select>
                       </div>
                       <div>
@@ -480,6 +475,12 @@ export default function Employees() {
               setConfirmOpen(false);
               setSelectedUserId(null);
             }}
+          />
+        )}
+        {showAddModal && (
+          <EmployeeAddModal
+            onClose={() => setShowAddModal(false)}
+            onSubmit={addEmployee}
           />
         )}
       </div>

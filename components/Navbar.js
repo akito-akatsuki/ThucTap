@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Eye, EyeOff, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
   Menu,
-  X,
   LogOut,
   ShieldCheck,
   Scan,
@@ -22,17 +22,64 @@ export default function Navbar() {
   const navRef = useRef(null);
 
   const [underline, setUnderline] = useState({ left: 0, width: 0 });
+  // Login form states
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [isAnimating, setIsAnimating] = useState(false);
+  const loginFormRef = useRef(null);
 
   /* =========================
       LOGIN (🔥 FIX 404)
   ========================= */
-  const login = async () => {
+  const toggleLoginForm = () => {
+    if (!showLoginForm) {
+      setIsAnimating(true);
+      setTimeout(() => setShowLoginForm(true), 50);
+    } else {
+      setIsAnimating(false);
+      setTimeout(() => setShowLoginForm(false), 250);
+    }
+    setLoginError("");
+  };
+
+  const closeLoginForm = () => {
+    setIsAnimating(false);
+    setTimeout(() => {
+      setShowLoginForm(false);
+      setEmail("");
+      setPassword("");
+      setLoginError("");
+    }, 250);
+  };
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    setLoginError("");
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      closeLoginForm();
+    } catch (error) {
+      setLoginError(error.message);
+    }
+  };
+
+  const googleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: window.location.origin,
       },
     });
+    closeLoginForm();
   };
 
   const logout = async () => {
@@ -119,6 +166,26 @@ export default function Navbar() {
   const avatar =
     user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
+  // Click outside to close login form
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        loginFormRef.current &&
+        !loginFormRef.current.contains(event.target)
+      ) {
+        closeLoginForm();
+      }
+    };
+
+    if (showLoginForm) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showLoginForm]);
+
   return (
     <nav
       ref={navRef}
@@ -166,12 +233,134 @@ export default function Navbar() {
         {/* RIGHT */}
         <div className="flex items-center gap-3">
           {!user ? (
-            <button
-              onClick={login}
-              className="px-6 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition shadow-lg shadow-gray-200"
-            >
-              Login
-            </button>
+            <div className="relative">
+              <button
+                onClick={toggleLoginForm}
+                className="px-6 py-2.5 bg-gradient-to-r from-gray-900 to-gray-800 text-white text-sm font-bold rounded-2xl hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:shadow-blue-200 transition-all duration-300 scale-100 hover:scale-105 active:scale-95 shadow-lg shadow-gray-200"
+              >
+                Login
+              </button>
+
+              {isAnimating && (
+                <>
+                  {/* Backdrop */}
+                  <div
+                    className={`fixed inset-0 z-[49] bg-black/40 backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 ${showLoginForm ? "opacity-100 delay-150" : "opacity-0"}`}
+                    style={{
+                      animation: showLoginForm
+                        ? "fadeIn 0.5s cubic-bezier(0.4,0,0.2,1) forwards"
+                        : "fadeOut 0.4s cubic-bezier(0.4,0,0.2,1) forwards",
+                    }}
+                    onClick={closeLoginForm}
+                  />
+
+                  {/* Login Form */}
+                  <div
+                    ref={loginFormRef}
+                    className="absolute right-0 top-full mt-3 w-96 bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 p-8 z-[60] opacity-0 translate-y-4 scale-95 origin-top-right"
+                    style={{
+                      transform: showLoginForm
+                        ? "translateY(0) scale(1)"
+                        : "translateY(16px) scale(0.95)",
+                      opacity: showLoginForm ? 1 : 0,
+                      transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                      animation: showLoginForm
+                        ? "slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                        : "slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-black text-gray-900">
+                        Đăng nhập
+                      </h3>
+                      <button
+                        onClick={closeLoginForm}
+                        className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleEmailLogin} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-sm font-medium"
+                          placeholder="Nhập email của bạn"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Mật khẩu
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-sm font-medium"
+                            placeholder="Nhập mật khẩu"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 transition-colors"
+                          >
+                            {showPassword ? (
+                              <EyeOff size={18} />
+                            ) : (
+                              <Eye size={18} />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {loginError && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                          <p className="text-sm text-red-700 font-medium">
+                            {loginError}
+                          </p>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-blue-800 active:scale-95 transition-all duration-300 shadow-xl shadow-blue-200 hover:shadow-2xl hover:shadow-blue-300 text-sm"
+                      >
+                        Đăng nhập
+                      </button>
+                    </form>
+
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-200" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="px-4 bg-white text-gray-500 font-bold">
+                          Hoặc
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={googleLogin}
+                      className="w-full py-3.5 px-6 border-2 border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 font-bold rounded-2xl hover:bg-gray-50 hover:border-blue-300 hover:shadow-xl hover:shadow-white/20 transition-all duration-300 active:scale-95 shadow-lg shadow-gray-100 flex items-center justify-center gap-3 text-sm"
+                    >
+                      <span className="w-5 h-5 bg-[url('https://cdn-icons-png.flaticon.com/32/281/281764.png')] bg-cover bg-center bg-no-repeat" />
+                      Đăng nhập với Google
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
             <div className="flex items-center gap-4 bg-gray-50 p-1.5 pr-4 rounded-2xl border border-gray-100">
               {avatar ? (
@@ -213,6 +402,27 @@ export default function Navbar() {
           </button>
         </div>
       </div>
+
+      {/* MOBILE MENU */}
+      {open && (
+        <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-gray-100 p-4 space-y-2 shadow-xl">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className={`flex items-center gap-3 p-4 rounded-2xl font-bold ${
+                pathname === item.href
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-600"
+              }`}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* MOBILE MENU */}
       {open && (

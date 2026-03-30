@@ -91,34 +91,36 @@ export default function Dashboard() {
   function CategoryDropdown({ categories, value, onChange, placeholder, id }) {
     const toggle = () =>
       setDropdownOpen((prev) => ({ ...prev, [id]: !prev[id] }));
+
     const selected = categories.find((c) => c.id === value);
     const open = dropdownOpen[id] || false;
 
     return (
-      <div className="dropdown-container group">
+      <div className="relative w-full">
+        {/* BUTTON */}
         <div
           onClick={toggle}
-          className="flex justify-between items-center cursor-pointer select-none"
+          className="form-input flex justify-between items-center cursor-pointer"
         >
-          <span className="truncate flex-1 mr-2">
+          <span className="truncate">
             {selected ? selected.name : placeholder}
           </span>
+
           <svg
-            className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`}
+            className={`w-4 h-4 transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
+            <path strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
+
+        {/* DROPDOWN */}
         {open && (
-          <div className="dropdown-options">
+          <div className="absolute left-0 top-full mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-[9999] max-h-60 overflow-auto">
             {categories.map((c) => (
               <div
                 key={c.id}
@@ -126,7 +128,7 @@ export default function Dashboard() {
                   onChange(c.id);
                   toggle();
                 }}
-                className="dropdown-option"
+                className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
               >
                 {c.name}
               </div>
@@ -389,7 +391,7 @@ export default function Dashboard() {
 
       {/* MANAGEMENT */}
       {role === "admin" && (
-        <div className="rounded-3xl bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden">
+        <div className="rounded-3xl bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl overflow-visible relative z-10">
           {/* HEADER CLICK */}
           <div
             onClick={() => setOpenManage(!openManage)}
@@ -415,7 +417,7 @@ export default function Dashboard() {
               openManage
                 ? "max-h-[1000px] p-6 pt-0 opacity-100"
                 : "max-h-0 opacity-0"
-            } overflow-hidden`}
+            } overflow-visible`}
           >
             <form
               onSubmit={(e) => {
