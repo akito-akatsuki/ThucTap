@@ -24,7 +24,8 @@ export async function POST(req) {
     ========================= */
     const email = user.email;
     const name = user.user_metadata?.name || "Unknown";
-    const username = `${email} (${name})`;
+    const username = `${email} (${name})`; // Vẫn giữ cái này cho bảng invoices (nếu invoices vẫn là text)
+    const userId = user.id; // ✅ Lấy ID dạng UUID của user
 
     /* =========================
        🔥 GET PRODUCT PRICE
@@ -67,8 +68,8 @@ export async function POST(req) {
         product_id,
         type: "import",
         quantity: Number(quantity),
-        price, // 🔥 FIX QUAN TRỌNG
-        created_by: username,
+        price,
+        created_by: userId, // ✅ PHẢI LÀ UUID (user.id), không được dùng username
         invoice_id: invoice.id,
       });
 

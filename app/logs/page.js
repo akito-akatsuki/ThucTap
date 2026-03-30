@@ -56,16 +56,21 @@ export default function StockLogsPage() {
   );
 
   /* =========================
-     GROUP BY INVOICE
+      GROUP BY INVOICE
   ========================= */
   const grouped = sortedLogs.reduce((acc, log) => {
     const key = log.invoice_id || "no-invoice";
 
     if (!acc[key]) {
+      // ✅ Lấy tên hiển thị từ API (đã fix ở bước trước)
+      const displayName =
+        log.creator_display ||
+        (log.users ? `${log.users.name} (${log.users.email})` : "Hệ thống");
+
       acc[key] = {
         invoice_id: key,
         created_at: log.created_at,
-        user: log.created_by || "POS",
+        user: displayName, // Lưu tên thay vì UUID
         items: [],
         type: log.type,
       };
@@ -103,7 +108,6 @@ export default function StockLogsPage() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-
       {/* LIST */}
       {filtered.map((order) => {
         const shortId =
@@ -156,6 +160,7 @@ export default function StockLogsPage() {
                   </span>
                 </h3>
 
+                {/* ✅ Hiển thị tên/email người dùng thay vì UUID */}
                 <p style={getMetaStyle(isDark)}>👤 {order.user}</p>
                 <p style={getMetaStyle(isDark)}>🕒 {date}</p>
               </div>
@@ -170,7 +175,12 @@ export default function StockLogsPage() {
                   <div key={i.id} style={row}>
                     <span>{i.products?.name || "Unknown"}</span>
 
-                    <span>
+                    <span
+                      style={{
+                        color: i.type === "export" ? "#ef4444" : "#22c55e",
+                        fontWeight: 500,
+                      }}
+                    >
                       {i.type === "export" ? "📦 Export" : "📥 Import"}
                     </span>
 

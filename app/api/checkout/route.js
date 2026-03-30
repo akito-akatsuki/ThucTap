@@ -19,7 +19,7 @@ export async function POST(req) {
     let username = "POS";
 
     if (user) {
-      userId = user.id || null;
+      userId = user.id || null; // Đây là UUID
       name = user.name || "User";
       username = `${user.email} (${name})`;
     }
@@ -64,17 +64,15 @@ export async function POST(req) {
         quantity: item.qty,
         price: item.price,
       });
-
       const movementInsert = supabase.from("stock_movements").insert({
         product_id: item.id,
         type: "export",
         quantity: item.qty,
         price: item.price,
-        created_by: username,
+        created_by: userId, // ✅ THAY ĐỔI: Dùng userId (UUID) thay vì username (String)
         note: "sale",
-        invoice_id: invoice.id, // 🔥 quan trọng
+        invoice_id: invoice.id,
       });
-
       fetch(`${req.nextUrl.origin}/api/low-stock`, {
         method: "POST",
         headers: {

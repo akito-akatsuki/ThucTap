@@ -57,12 +57,11 @@ export default function Dashboard() {
   }, [router]);
 
   // Load functions
-  const loadProducts = async () => {
-    setLoading(true);
+  const loadProducts = async (silent = false) => {
+    if (!silent) setLoading(true); // Chỉ hiện skeleton nếu không phải update ngầm
     const res = await fetch("/api/products");
     const json = await res.json();
-    const list = json.data || [];
-    setProducts(list);
+    setProducts(json.data || []);
     setLoading(false);
   };
 
@@ -257,11 +256,11 @@ export default function Dashboard() {
           schema: "public",
           table: "stock_movements",
         },
-        loadProducts,
+        () => loadProducts(true), // ✅ Thêm true để load không hiện skeleton
       )
       .subscribe();
     return () => supabase.removeChannel(channel);
-  }, []);
+  }, [products.length]); // Thêm dependency để đảm bảo channel luôn lắng nghe đúng
 
   const filteredProducts = products.filter(
     (p) =>
@@ -611,12 +610,17 @@ export default function Dashboard() {
           product={modal.product}
           onClose={() => setModal(null)}
           onSubmit={async (data) => {
-            if (modal.type === "edit") {
+            // Đóng modal ngay lập tức để tạo cảm giác mượt mà
+            const currentType = modal.type;
+            const productId = modal.product.id;
+            setModal(null);
+
+            if (currentType === "edit") {
               await fetch("/api/products", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  id: modal.product.id,
+                  id: productId,
                   name: data.name,
                   price: Number(data.price),
                   min_stock: Number(data.min_stock),
@@ -624,24 +628,32 @@ export default function Dashboard() {
                 }),
               });
               toast.success("Updated");
+              loadProducts(true); // Edit thì nên gọi load ngầm vì nó không qua stock_movements
             }
-            if (modal.type === "import") {
+            if (currentType === "import") {
               const {
                 data: { session },
               } = await supabase.auth.getSession();
-              await fetch("/api/import", {
+
+              const res = await fetch("/api/import", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  product_id: modal.product.id,
+                  product_id: productId,
                   quantity: Number(data.qty),
                   user: session?.user,
                 }),
               });
-              toast.success("Imported");
+
+              if (res.ok) {
+                toast.success("Imported");
+                // ✅ ÉP CẬP NHẬT NGAY: Gọi loadProducts(true)
+                // Chữ 'true' đảm bảo số nhảy luôn mà không hiện màn hình loading (skeleton)
+                loadProducts(true);
+              } else {
+                toast.error("Import failed");
+              }
             }
-            setModal(null);
-            loadProducts();
           }}
         />
       )}

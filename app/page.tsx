@@ -465,16 +465,21 @@ export default function Home() {
 
     loadAI();
   }, [products]);
-
   const groupedLogs = useMemo(() => {
-    const grouped = logs.reduce<Record<string, any>>((acc, log) => {
+    const grouped = logs.reduce<Record<string, any>>((acc, log: any) => {
+      // Ép kiểu any để nhận users
       const key = log.invoice_id || "no-invoice";
 
       if (!acc[key]) {
+        // ✅ Lấy tên hiển thị giống như bên LogPage
+        const displayName = log.users
+          ? `${log.users.name}`
+          : log.created_by || "POS";
+
         acc[key] = {
           invoice_id: key,
           created_at: log.created_at,
-          user: log.created_by || "POS",
+          user: displayName, // Lưu tên ở đây
           items: [],
           type: log.type,
         };
@@ -490,9 +495,8 @@ export default function Home() {
           new Date(b.created_at || 0).getTime() -
           new Date(a.created_at || 0).getTime(),
       )
-      .slice(0, 3); // Lấy 3 log gần nhất
+      .slice(0, 3);
   }, [logs]);
-
   /* =========================
       RENDER MAIN UI
   ========================= */
@@ -675,6 +679,7 @@ export default function Home() {
             </div>
 
             {/* RECENT LOGS */}
+            {/* RECENT LOGS */}
             <div className="bg-white shadow-sm rounded-[32px] p-8 border border-gray-100">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold text-gray-900">
@@ -688,7 +693,7 @@ export default function Home() {
                 </button>
               </div>
               <div className="space-y-4">
-                {groupedLogs.slice(0, 3).map((log) => (
+                {groupedLogs.map((log) => (
                   <div
                     key={log.invoice_id}
                     className="text-xs p-3 bg-gray-50 rounded-xl"
@@ -708,7 +713,10 @@ export default function Home() {
                         {log.type?.toUpperCase()}
                       </span>
 
-                      <span className="text-gray-500">{log.created_by}</span>
+                      {/* ✅ THAY ĐỔI Ở ĐÂY: Dùng log.user thay vì log.created_by */}
+                      <span className="text-gray-500 font-medium">
+                        {log.user}
+                      </span>
                     </div>
                   </div>
                 ))}

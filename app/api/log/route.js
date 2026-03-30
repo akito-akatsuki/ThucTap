@@ -16,6 +16,7 @@ export async function GET() {
       created_by,
       invoice_id,
       products ( name ),
+      users ( name, email ),
       invoices (
         id,
         created_at,
@@ -30,7 +31,15 @@ export async function GET() {
     return Response.json({ error: error.message });
   }
 
-  return Response.json({ data });
+  // Map lại dữ liệu để Frontend dễ dùng (nếu muốn)
+  const formattedData = data.map((log) => ({
+    ...log,
+    creator_display: log.users
+      ? `${log.users.email} (${log.users.name})`
+      : "Unknown",
+  }));
+
+  return Response.json({ data: formattedData });
 }
 
 /* =========================
@@ -39,11 +48,12 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
+    // 1. Nhận thêm id từ body (hoặc từ supabase.auth.getUser() nếu bạn làm backend chuẩn)
     const { product_id, quantity, type, user } = body;
 
-    if (!product_id || !quantity || !type) {
+    if (!product_id || !quantity || !type || !user?.id) {
       return Response.json({
-        error: "Missing fields",
+        error: "Missing fields or User ID",
       });
     }
 
@@ -65,13 +75,10 @@ export async function POST(req) {
     const price = product.price || 0;
     const total = quantity * price;
 
-    /* =========================
-       USER INFO
-    ========================= */
+    // 2. Chuẩn bị thông tin để ghi vào hóa đơn (vẫn giữ text nếu bảng invoices chưa đổi)
     const email = user?.email || "unknown@email.com";
-    const nameUser = user?.user_metadata?.full_name || "Unknown";
+    const nameUser = user?.user_metadata?.full_name || user?.name || "Unknown";
     const username = `${email} (${nameUser})`;
-
     /* =========================
        CREATE INVOICE
     ========================= */
@@ -79,35 +86,29 @@ export async function POST(req) {
       .from("invoices")
       .insert({
         total,
-        created_name: username,
+        created_name: username, // Nếu bảng invoices bạn cũng đổi sang UUID thì chỗ này phải sửa tiếp
       })
       .select()
       .single();
 
     if (invoiceError) {
-      return Response.json({
-        error: invoiceError.message,
-      });
+      return Response.json({ error: invoiceError.message });
     }
-
     /* =========================
        INSERT LOG
     ========================= */
     const { error: logError } = await supabase.from("stock_movements").insert({
       product_id,
       quantity,
-      price, // 🔥 lấy từ product
+      price,
       type,
-      created_by: username,
+      created_by: user.id, // 🔥 QUAN TRỌNG: Truyền UUID thay vì String
       invoice_id: invoice.id,
     });
 
     if (logError) {
-      return Response.json({
-        error: logError.message,
-      });
+      return Response.json({ error: logError.message });
     }
-
     /* =========================
        UPDATE INVENTORY (AUTO)
     ========================= */
