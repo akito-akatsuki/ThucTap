@@ -189,10 +189,11 @@ export default function Navbar() {
   }, [showLoginForm]);
 
   return (
-    <nav
-      ref={navRef}
-      className="sticky top-0 z-[100] w-full border-b border-gray-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-8"
-    >
+    <>
+      <nav
+        ref={navRef}
+        className="sticky top-0 z-[100] w-full border-b border-gray-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-8"
+      >
       <div className="max-w-[1500px] mx-auto flex h-20 items-center justify-between">
         {/* LOGO */}
         <Link href="/" className="flex items-center gap-2 group">
@@ -242,125 +243,6 @@ export default function Navbar() {
               >
                 Login
               </button>
-
-              {isAnimating && (
-                <>
-                  {/* Backdrop */}
-                  <div
-                    className={`fixed inset-0 z-[49] bg-black/40 backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 ${showLoginForm ? "opacity-100 delay-150" : "opacity-0"}`}
-                    style={{
-                      animation: showLoginForm
-                        ? "fadeIn 0.5s cubic-bezier(0.4,0,0.2,1) forwards"
-                        : "fadeOut 0.4s cubic-bezier(0.4,0,0.2,1) forwards",
-                    }}
-                    onClick={closeLoginForm}
-                  />
-
-                  {/* Login Form */}
-                  <div
-                    className={`fixed inset-0 z-[60] p-4 overflow-y-auto md:inset-auto md:absolute md:right-0 md:top-full md:mt-3 md:p-0 ${showLoginForm ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-                    onClick={(event) => {
-                      if (event.target === event.currentTarget) {
-                        closeLoginForm();
-                      }
-                    }}
-                  >
-                    <div
-                      ref={loginFormCardRef}
-                      className={`relative w-full max-w-xl md:w-[420px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 dark:border-slate-700 p-8 transition-all duration-300 transform origin-top-right ${showLoginForm ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-8 md:-translate-y-4"} max-h-[calc(100vh-4rem)] overflow-y-auto`}
-                    >
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-black text-gray-900 dark:text-slate-100">
-                          Đăng nhập
-                        </h3>
-                        <button
-                          onClick={closeLoginForm}
-                          className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                        >
-                          <X size={20} />
-                        </button>
-                      </div>
-
-                      <form onSubmit={handleEmailLogin} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-bold text-gray-700 dark:text-slate-200 mb-2">
-                            Email
-                          </label>
-                          <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm font-medium text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                            placeholder="Nhập email của bạn"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-bold text-gray-700 dark:text-slate-200 mb-2">
-                            Mật khẩu
-                          </label>
-                          <div className="relative">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm font-medium text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                              placeholder="Nhập mật khẩu"
-                              required
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-100 p-1 transition-colors"
-                            >
-                              {showPassword ? (
-                                <EyeOff size={18} />
-                              ) : (
-                                <Eye size={18} />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        {loginError && (
-                          <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl">
-                            <p className="text-sm text-red-700 dark:text-red-200 font-medium">
-                              {loginError}
-                            </p>
-                          </div>
-                        )}
-
-                        <button
-                          type="submit"
-                          className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-blue-800 active:scale-95 transition-all duration-300 shadow-xl shadow-blue-200 hover:shadow-2xl hover:shadow-blue-300 text-sm"
-                        >
-                          Đăng nhập
-                        </button>
-                      </form>
-
-                      <div className="relative my-6">
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-gray-200 dark:border-slate-700" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="px-4 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400 font-bold">
-                            Hoặc
-                          </span>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={googleLogin}
-                        className="w-full py-3.5 px-6 border-2 border-gray-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm text-gray-900 dark:text-slate-100 font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-950 hover:border-blue-300 hover:shadow-xl hover:shadow-white/20 transition-all duration-300 active:scale-95 shadow-lg shadow-gray-100 dark:shadow-none flex items-center justify-center gap-3 text-sm"
-                      >
-                        <span className="w-5 h-5 bg-[url('https://cdn-icons-png.flaticon.com/32/281/281764.png')] bg-cover bg-center bg-no-repeat" />
-                        Đăng nhập với Google
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
             </div>
           ) : (
             <div className="flex items-center gap-4 bg-gray-50 dark:bg-slate-900 p-1.5 pr-4 rounded-2xl border border-gray-100 dark:border-slate-700">
@@ -424,6 +306,126 @@ export default function Navbar() {
           ))}
         </div>
       )}
-    </nav>
+      </nav>
+
+      {isAnimating && (
+        <>
+          {/* Backdrop */}
+          <div
+            className={`fixed inset-0 z-[998] bg-black/40 backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 ${showLoginForm ? "opacity-100 delay-150" : "opacity-0"}`}
+            style={{
+              animation: showLoginForm
+                ? "fadeIn 0.5s cubic-bezier(0.4,0,0.2,1) forwards"
+                : "fadeOut 0.4s cubic-bezier(0.4,0,0.2,1) forwards",
+            }}
+            onClick={closeLoginForm}
+          />
+
+          {/* Login Form */}
+          <div
+            className={`fixed inset-0 z-[999] flex items-center justify-center p-4 overflow-y-auto ${showLoginForm ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
+                closeLoginForm();
+              }
+            }}
+          >
+            <div
+              ref={loginFormCardRef}
+              className={`relative w-full max-w-xl md:w-[420px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 dark:border-slate-700 p-8 transition-all duration-300 transform origin-top-right ${showLoginForm ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-8 md:-translate-y-4"} max-h-[calc(100vh-4rem)] overflow-y-auto`}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-black text-gray-900 dark:text-slate-100">
+                  Sign In
+                </h3>
+                <button
+                  onClick={closeLoginForm}
+                  className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleEmailLogin} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-slate-200 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm font-medium text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-slate-200 mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm font-medium text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      placeholder="Enter your password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-100 p-1 transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff size={18} />
+                      ) : (
+                        <Eye size={18} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {loginError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl">
+                    <p className="text-sm text-red-700 dark:text-red-200 font-medium">
+                      {loginError}
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-blue-800 active:scale-95 transition-all duration-300 shadow-xl shadow-blue-200 hover:shadow-2xl hover:shadow-blue-300 text-sm"
+                >
+                  Sign In
+                </button>
+              </form>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200 dark:border-slate-700" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="px-4 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400 font-bold">
+                    Or
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={googleLogin}
+                className="w-full py-3.5 px-6 border-2 border-gray-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm text-gray-900 dark:text-slate-100 font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-950 hover:border-blue-300 hover:shadow-xl hover:shadow-white/20 transition-all duration-300 active:scale-95 shadow-lg shadow-gray-100 dark:shadow-none flex items-center justify-center gap-3 text-sm"
+              >
+                <span className="w-5 h-5 bg-[url('https://cdn-icons-png.flaticon.com/32/281/281764.png')] bg-cover bg-center bg-no-repeat" />
+                Sign in with Google
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }

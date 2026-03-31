@@ -125,7 +125,7 @@ function CategoryDropdown({
   return (
     <div ref={dropdownRef} className="relative w-full md:w-[280px]">
       <label className="text-sm font-medium text-gray-600 dark:text-slate-400 mb-1.5 block">
-        Lọc theo danh mục:
+        Category
       </label>
       <div
         onClick={() => setOpen(!open)}
@@ -134,7 +134,7 @@ function CategoryDropdown({
         <span
           className={`${selected ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-slate-500"} text-base font-medium`}
         >
-          {selected?.name || "Tất cả danh mục"}
+          {selected?.name || "All Categories"}
         </span>
         <ChevronDown
           className={`w-5 h-5 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
@@ -155,7 +155,7 @@ function CategoryDropdown({
           }}
           className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer text-gray-700 dark:text-slate-200 font-medium"
         >
-          Tất cả danh mục
+          All Categories
         </div>
 
         {categories.map((c) => (
@@ -184,25 +184,25 @@ function MonthDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const monthNames = [
-    "Tháng 1",
-    "Tháng 2",
-    "Tháng 3",
-    "Tháng 4",
-    "Tháng 5",
-    "Tháng 6",
-    "Tháng 7",
-    "Tháng 8",
-    "Tháng 9",
-    "Tháng 10",
-    "Tháng 11",
-    "Tháng 12",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
   const selected = monthNames[value - 1];
 
   return (
     <div className="relative w-full md:w-32">
       <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">
-        Tháng
+        Month
       </label>
       <div
         onClick={() => setOpen(!open)}
@@ -254,7 +254,7 @@ function YearDropdown({
   return (
     <div className="relative w-full md:w-32">
       <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">
-        Năm
+        Year
       </label>
       <div
         onClick={() => setOpen(!open)}
