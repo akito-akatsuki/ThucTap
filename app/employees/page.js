@@ -225,13 +225,13 @@ export default function Employees() {
     <div className="dashboard-page">
       <div className="dashboard-card">
         {/* Header */}
-        <div className="dashboard-card-header flex items-center gap-3 mb-6">
-          <div className="flex items-center gap-3">
+        <div className="dashboard-card-header flex flex-col lg:flex-row lg:items-center gap-4 mb-6">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
               <span className="text-white font-bold text-xl">👨‍💼</span>
             </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+            <div className="min-w-0">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent truncate">
                 Employee Management
               </h1>
               <p className="text-gray-500 dark:text-slate-400 mt-1">
@@ -241,10 +241,10 @@ export default function Employees() {
           </div>
 
           {/* Add Employee Button at Top Right */}
-          <div className="ml-auto">
+          <div className="w-full lg:w-auto flex justify-start lg:justify-end">
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm"
+              className="w-full lg:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm"
             >
               <span className="text-xl">+</span>
               Add Employee
@@ -426,7 +426,7 @@ export default function Employees() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div>
                         <div className="text-gray-500 dark:text-slate-400 uppercase text-xs font-medium tracking-wide mb-1">
                           Role
