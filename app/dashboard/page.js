@@ -324,7 +324,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard-page min-h-screen space-y-10 px-4 md:px-6 pb-10">
+    <div className="dashboard-page smooth-scroll-page min-h-screen space-y-10 px-4 md:px-6 pb-10">
       {/* HERO */}
       <div className="relative overflow-hidden rounded-3xl p-8 md:p-10 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-white/20 shadow-xl backdrop-blur-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

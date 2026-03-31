@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Scanner from "@/components/Scanner";
 import toast from "react-hot-toast";
+import { supabase } from "@/lib/supabase";
 import { formatVND } from "../utils/currency";
 
 export default function ScanPage() {
   const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const lastScanRef = useRef(0);
   const scanningRef = useRef(false);
@@ -17,6 +19,25 @@ export default function ScanPage() {
   const [scanning, setScanning] = useState(false);
 
   // HANDLE SCAN
+  useEffect(() => {
+    const check = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace("/");
+        return;
+      }
+      setCheckingAuth(false);
+    };
+
+    check();
+  }, [router]);
+
+  if (checkingAuth) {
+    return null;
+  }
+
   const handleScan = async (barcode) => {
     const now = Date.now();
 

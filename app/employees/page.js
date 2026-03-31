@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ConfirmModal from "@/components/ConfirmModal";
 import EmployeeAddModal from "@/components/EmployeeAddModal";
 
 export default function Employees() {
+  const router = useRouter();
   const [users, setUsers] = useState([]);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -27,9 +30,25 @@ export default function Employees() {
   }, [users, searchTerm]);
 
   useEffect(() => {
-    init();
-    getCurrentUser();
-  }, []);
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace("/");
+        return;
+      }
+      await init();
+      await getCurrentUser();
+      setCheckingAuth(false);
+    };
+
+    checkAuth();
+  }, [router]);
+
+  if (checkingAuth) {
+    return null;
+  }
 
   const init = async () => {
     const {
@@ -222,7 +241,7 @@ export default function Employees() {
   }
 
   return (
-    <div className="dashboard-page">
+    <div className="dashboard-page smooth-scroll-page">
       <div className="dashboard-card">
         {/* Header */}
         <div className="dashboard-card-header flex flex-col lg:flex-row lg:items-center gap-4 mb-6">

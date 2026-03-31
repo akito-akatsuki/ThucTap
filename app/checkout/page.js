@@ -19,6 +19,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const router = useRouter();
 
@@ -29,6 +30,25 @@ export default function CheckoutPage() {
     const cart = localStorage.getItem("cart");
     if (cart) setItems(JSON.parse(cart));
   }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace("/");
+      } else {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  if (checkingAuth) {
+    return null;
+  }
 
   /* =========================
      TOTAL - UNCHANGED

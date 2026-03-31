@@ -206,7 +206,11 @@ h3 {
   padding: 0.75rem 1rem;
   border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
-  transition: all 0.2s;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    box-shadow 0.2s;
+  will-change: border-color, background-color, box-shadow;
 }
 
 .dark .form-input {
@@ -229,7 +233,11 @@ h3 {
   border-radius: 0.75rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   transform: translateY(0);
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+  will-change: transform, box-shadow, background-color;
   white-space: nowrap;
 }
 
@@ -247,7 +255,11 @@ h3 {
   border-radius: 0.75rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   transform: translateY(0);
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+  will-change: transform, box-shadow, background-color;
 }
 
 .btn-success:hover {
@@ -264,7 +276,11 @@ h3 {
   border-radius: 0.75rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   transform: translateY(0);
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+  will-change: transform, box-shadow, background-color;
 }
 
 .btn-danger:hover {
@@ -282,7 +298,11 @@ h3 {
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   transform: translateY(0);
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+  will-change: transform, box-shadow, background-color;
 }
 
 .btn-qr:hover {
@@ -295,20 +315,28 @@ h3 {
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.smooth-scroll-page {
+  scroll-behavior: smooth;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 1.5rem;
   overflow: hidden;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .dark .data-table {
-  background: rgba(31, 41, 55, 0.5);
+  background: rgba(31, 41, 55, 0.95);
 }
 
 .data-table th {
@@ -392,18 +420,19 @@ h3 {
   padding: 1.5rem;
   border: 1px solid #e5e7eb;
   border-radius: 1.5rem;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 12px -4px rgba(0, 0, 0, 0.08);
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .product-card:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 18px -6px rgba(0, 0, 0, 0.08);
 }
 
 .dark .product-card {
   border-color: #374151;
-  background: rgba(31, 41, 55, 0.6);
+  background: rgba(31, 41, 55, 0.95);
 }
 
 /* Dropdown */
