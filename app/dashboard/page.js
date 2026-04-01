@@ -420,7 +420,11 @@ export default function Dashboard() {
                   onChange={(e) => setNewCategory(e.target.value)}
                   className="form-input flex-1"
                 />
-                <button onClick={addCategory} type="button" className="btn-success">
+                <button
+                  onClick={addCategory}
+                  type="button"
+                  className="btn-success"
+                >
                   Add
                 </button>
               </div>

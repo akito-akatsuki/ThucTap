@@ -29,6 +29,20 @@ export default function Employees() {
     });
   }, [users, searchTerm]);
 
+  async function init() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const email = session.user.email;
+    const res = await fetch(`/api/users?email=${email}`);
+    const json = await res.json();
+
+    setRole(json.role);
+    loadUsers();
+  }
+
   useEffect(() => {
     const checkAuth = async () => {
       const {
@@ -46,24 +60,6 @@ export default function Employees() {
     checkAuth();
   }, [router]);
 
-  if (checkingAuth) {
-    return null;
-  }
-
-  const init = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const email = session.user.email;
-    const res = await fetch(`/api/users?email=${email}`);
-    const json = await res.json();
-
-    setRole(json.role);
-    loadUsers();
-  };
-
   const getCurrentUser = async () => {
     const {
       data: { user },
@@ -77,6 +73,10 @@ export default function Employees() {
     setUsers(json.data || []);
     setLoading(false);
   };
+
+  if (checkingAuth) {
+    return null;
+  }
 
   const changeRole = async (id, role) => {
     const {
