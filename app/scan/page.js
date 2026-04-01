@@ -207,48 +207,42 @@ export default function ScanPage() {
             </h2>
           </div>
 
-          <div className="flex-1 overflow-y-auto mb-8 pr-2 -mr-2">
+          <div className="space-y-4">
             {cart.length === 0 ? (
-              <div className="text-center py-20">
-                <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-800 dark:to-slate-900 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg">
-                  <span className="text-3xl">🛒</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  Cart is empty
-                </h3>
+              <div className="text-center py-12">
                 <p className="text-gray-500 dark:text-slate-400">
-                  Scan products to get started
+                  Your cart is empty
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid gap-4">
                 {cart.map((item) => (
                   <div
                     key={item.id}
                     className="group bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-950/80 border border-gray-100/50 dark:border-slate-700/50 hover:border-emerald-200/50 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                   >
-                    <div className="flex items-start lg:items-center justify-between gap-4 lg:gap-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
                       {/* Product Info */}
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-emerald-700 truncate mb-1">
                           {item.name}
                         </h4>
                         <p className="text-sm text-gray-500 dark:text-slate-400">
-                          Unit: {formatVND(item.price)}
+                          Unit Price: {formatVND(item.price)}
                         </p>
                       </div>
 
-                      {/* Price */}
+                      {/* Price Display (Desktop) */}
                       <div className="text-right hidden sm:block">
                         <div className="text-2xl font-bold text-gray-900 dark:text-white">
                           {formatVND(item.price * item.qty)}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-slate-400 line-through">
-                          {formatVND(item.price)}
+                        <div className="text-sm text-gray-400 dark:text-slate-500">
+                          Total Subtotal
                         </div>
                       </div>
 
-                      {/* Qty Controls */}
+                      {/* Quantity Controls & Actions */}
                       <div className="flex items-center gap-3 ml-auto sm:ml-0">
                         <div className="flex items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur rounded-xl p-2 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200">
                           <button
@@ -268,7 +262,7 @@ export default function ScanPage() {
                               handleInputQty(item.id, e.target.value)
                             }
                             onWheel={(e) => e.target.blur()}
-                            className="w-20 text-center border-0 bg-transparent font-bold text-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2 py-1"
+                            className="w-16 text-center border-0 bg-transparent font-bold text-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2 py-1"
                           />
                           <button
                             onClick={() => increaseQty(item.id)}
@@ -296,9 +290,9 @@ export default function ScanPage() {
 
                     {/* Stock Warning */}
                     {item.qty >= item.stock && (
-                      <div className="mt-3 p-2 bg-orange-100 border border-orange-200 rounded-xl">
-                        <span className="text-xs font-medium text-orange-800">
-                          ⚠️ Max stock reached
+                      <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900/50 rounded-xl">
+                        <span className="text-xs font-medium text-orange-800 dark:text-orange-400 flex items-center gap-1">
+                          ⚠️ Maximum stock reached
                         </span>
                       </div>
                     )}
