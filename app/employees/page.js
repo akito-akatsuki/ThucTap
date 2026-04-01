@@ -13,6 +13,7 @@ export default function Employees() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
@@ -25,9 +26,11 @@ export default function Employees() {
       const matchesSearch = u.email
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
-      return matchesSearch;
+      const matchesRole =
+        roleFilter === "all" ? true : u.role === roleFilter;
+      return matchesSearch && matchesRole;
     });
-  }, [users, searchTerm]);
+  }, [users, searchTerm, roleFilter]);
 
   async function init() {
     const {
@@ -296,6 +299,22 @@ export default function Employees() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-medium text-gray-700 dark:text-gray-200"
             />
+          </div>
+
+          <div className="w-full lg:w-56">
+            <label className="sr-only" htmlFor="roleFilter">
+              Filter by role
+            </label>
+            <select
+              id="roleFilter"
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-full py-3 px-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-gray-700 dark:text-gray-200"
+            >
+              <option value="all">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="staff">Staff</option>
+            </select>
           </div>
         </div>
 
