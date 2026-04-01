@@ -6,6 +6,7 @@ import { formatVND } from "../utils/currency";
 export default function StockLogsPage() {
   const [logs, setLogs] = useState([]);
   const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [open, setOpen] = useState({});
   const [isDark, setIsDark] = useState(false);
 
@@ -86,6 +87,10 @@ export default function StockLogsPage() {
   const keyword = search.toLowerCase().trim();
 
   const filtered = Object.values(grouped).filter((order) => {
+    if (typeFilter !== "all" && order.type !== typeFilter) {
+      return false;
+    }
+
     if (!keyword) return true;
 
     return (
@@ -99,15 +104,37 @@ export default function StockLogsPage() {
 
   return (
     <div style={getPageStyle(isDark)}>
-      <h1 style={getTitleStyle(isDark)}>📦 Stock Movement Logs</h1>
+      <h1 style={getTitleStyle(isDark)}>📦 STOCK MOVEMENT LOGS</h1>
+
+      <div style={statsRow(isDark)}>
+        <div style={statCard(isDark)}>
+          <div style={statLabel}>Total records</div>
+          <div style={statValue}>{filtered.length}</div>
+        </div>
+        <div style={statCard(isDark)}>
+          <div style={statLabel}>Active search</div>
+          <div style={statValue}>{search ? "YES" : "NO"}</div>
+        </div>
+      </div>
 
       {/* SEARCH */}
-      <input
-        style={getInputStyle(isDark)}
-        placeholder="Search product / invoice / user..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div style={getSearchRowStyle(isDark)}>
+        <input
+          style={getInputStyle(isDark)}
+          placeholder="Search product / invoice / user..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <select
+          style={getSelectStyle(isDark)}
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+        >
+          <option value="all">ALL</option>
+          <option value="import">IMPORT</option>
+          <option value="export">EXPORT</option>
+        </select>
+      </div>
       {/* LIST */}
       {filtered.map((order) => {
         const shortId =
@@ -146,13 +173,14 @@ export default function StockLogsPage() {
                     style={{
                       background: isExport ? "#ef4444" : "#22c55e",
                       color: "white",
-                      padding: "4px 10px",
-                      borderRadius: 6,
+                      padding: "6px 12px",
+                      borderRadius: 8,
                       fontSize: 14,
                       fontWeight: "bold",
+                      textTransform: "uppercase",
                     }}
                   >
-                    🧾 INV-{shortId}
+                    {isExport ? "📦 EXPORT" : "📥 IMPORT"}
                   </span>
 
                   <span style={{ fontSize: 14, color: "#64748b" }}>
@@ -160,12 +188,25 @@ export default function StockLogsPage() {
                   </span>
                 </h3>
 
-                {/* ✅ Hiển thị tên/email người dùng thay vì UUID */}
-                <p style={getMetaStyle(isDark)}>👤 {order.user}</p>
-                <p style={getMetaStyle(isDark)}>🕒 {date}</p>
+                <p style={getMetaStyle(isDark)}>
+                  <strong>INVOICE:</strong> INV-{shortId}
+                </p>
+                <p style={getMetaStyle(isDark)}>
+                  <strong>USER:</strong> {order.user}
+                </p>
+                <p style={getMetaStyle(isDark)}>
+                  <strong>DATE:</strong> {date}
+                </p>
               </div>
 
-              <div style={getTotalStyle(isDark)}>💰 {formatVND(total)}</div>
+              <div style={getTotalStyle(isDark)}>
+                <span
+                  style={{ display: "block", fontSize: 12, color: "#94a3b8" }}
+                >
+                  TOTAL
+                </span>
+                {formatVND(total)}
+              </div>
             </div>
 
             {/* DROPDOWN */}
@@ -173,20 +214,25 @@ export default function StockLogsPage() {
               <div style={getDropdownStyle(isDark)}>
                 {order.items.map((i) => (
                   <div key={i.id} style={row}>
-                    <span>{i.products?.name || "Unknown"}</span>
+                    <span
+                      style={{ fontWeight: 600, textTransform: "uppercase" }}
+                    >
+                      {i.products?.name || "UNKNOWN"}
+                    </span>
 
                     <span
                       style={{
                         color: i.type === "export" ? "#ef4444" : "#22c55e",
-                        fontWeight: 500,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
                       }}
                     >
-                      {i.type === "export" ? "📦 Export" : "📥 Import"}
+                      {i.type === "export" ? "EXPORT" : "IMPORT"}
                     </span>
 
                     <span>x{i.quantity}</span>
 
-                    <span style={{ textAlign: "right" }}>
+                    <span style={{ textAlign: "right", fontWeight: 600 }}>
                       {formatVND(i.price || 0)}
                     </span>
                   </div>
@@ -216,8 +262,10 @@ const getTitleStyle = (dark) => ({
 });
 
 const getInputStyle = (dark) => ({
-  padding: 10,
-  marginBottom: 20,
+  height: 40,
+  padding: "0 12px",
+  marginBottom: 0,
+  flex: 1,
   width: "100%",
   maxWidth: 320,
   borderRadius: 8,
@@ -270,4 +318,52 @@ const row = {
 const getTotalStyle = (dark) => ({
   fontWeight: "bold",
   color: dark ? "#4ade80" : "#16a34a",
+  textAlign: "right",
+});
+
+const statsRow = (dark) => ({
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: 16,
+  marginBottom: 20,
+});
+
+const statCard = (dark) => ({
+  padding: 18,
+  borderRadius: 14,
+  background: dark ? "#111827" : "#ffffff",
+  border: "1px solid " + (dark ? "#334155" : "#e2e8f0"),
+  boxShadow: dark
+    ? "0 2px 12px rgba(0,0,0,0.35)"
+    : "0 2px 10px rgba(15,23,42,0.06)",
+});
+
+const statLabel = {
+  fontSize: 12,
+  textTransform: "uppercase",
+  letterSpacing: "0.12em",
+  color: "#64748b",
+  marginBottom: 8,
+};
+
+const statValue = {
+  fontSize: 24,
+  fontWeight: "bold",
+};
+
+const getSearchRowStyle = (dark) => ({
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 12,
+  alignItems: "center",
+  marginBottom: 20,
+});
+
+const getSelectStyle = (dark) => ({
+  padding: 10,
+  minWidth: 160,
+  borderRadius: 8,
+  border: "1px solid " + (dark ? "#334155" : "#ddd"),
+  background: dark ? "#1e293b" : "white",
+  color: dark ? "white" : "black",
 });

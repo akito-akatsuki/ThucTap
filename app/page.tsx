@@ -714,7 +714,7 @@ export default function Home() {
             {/* RECENT LOGS */}
             <div className="bg-white dark:bg-slate-900 shadow-sm rounded-[32px] p-8 border border-gray-100 dark:border-slate-700">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-[0.08em]">
                   Inventory Logs
                 </h3>
                 <button
@@ -728,10 +728,10 @@ export default function Home() {
                 {groupedLogs.map((log) => (
                   <div
                     key={log.invoice_id}
-                    className="text-xs p-3 bg-gray-50 dark:bg-slate-950 rounded-xl"
+                    className="text-xs p-3 bg-gray-50 dark:bg-slate-950 rounded-xl uppercase"
                   >
                     <div className="font-mono font-bold text-sm text-gray-900 dark:text-white mb-1">
-                      {log.invoice_id?.slice(0, 8) || "N/A"}
+                      {log.invoice_id?.slice(0, 8).toUpperCase() || "N/A"}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -745,7 +745,6 @@ export default function Home() {
                         {log.type?.toUpperCase()}
                       </span>
 
-                      {/* ✅ THAY ĐỔI Ở ĐÂY: Dùng log.user thay vì log.created_by */}
                       <span className="text-gray-500 dark:text-slate-300 font-medium">
                         {log.user}
                       </span>
