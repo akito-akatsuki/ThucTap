@@ -23,33 +23,48 @@ const transporter = nodemailer.createTransport({
 ========================= */
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
   const email = searchParams.get("email");
 
-  if (!email) {
+  if (id) {
     const { data, error } = await supabase
       .from("users")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("role")
+      .eq("id", id)
+      .single();
 
     if (error) {
-      console.error("Users fetch error:", error);
-      return Response.json({ data: [], error: error.message }, { status: 500 });
+      return Response.json({ role: null });
     }
 
-    return Response.json({ data });
+    return Response.json({ role: data?.role ?? null });
+  }
+
+  if (email) {
+    const { data, error } = await supabase
+      .from("users")
+      .select("role")
+      .eq("email", email)
+      .single();
+
+    if (error) {
+      return Response.json({ role: null });
+    }
+
+    return Response.json({ role: data?.role ?? null });
   }
 
   const { data, error } = await supabase
     .from("users")
-    .select("role")
-    .eq("email", email)
-    .single();
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) {
-    return Response.json({ role: null });
+    console.error("Users fetch error:", error);
+    return Response.json({ data: [], error: error.message }, { status: 500 });
   }
 
-  return Response.json({ role: data.role });
+  return Response.json({ data });
 }
 
 /* =========================

@@ -13,6 +13,14 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
   const [category, setCategory] = useState(product?.category_id || "");
   const [categories, setCategories] = useState([]);
 
+  /* SYNC PRODUCT WHEN EDITING */
+  useEffect(() => {
+    setName(product?.name || "");
+    setPrice(product?.price || "");
+    setMinStock(product?.min_stock || 5);
+    setCategory(product?.category_id || "");
+  }, [product]);
+
   /* LOAD CATEGORIES */
   useEffect(() => {
     const load = async () => {
@@ -65,7 +73,7 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
         return;
       }
 
-      if (isNaN(price)) {
+      if (price === "" || isNaN(Number(price))) {
         toast.error("Price must be a number");
         return;
       }
@@ -77,7 +85,7 @@ export default function InputModal({ type, product, onClose, onSubmit }) {
           name,
           price: Number(price),
           min_stock: Number(minStock),
-          category_id: category,
+          category_id: category || null,
         });
 
         onClose();

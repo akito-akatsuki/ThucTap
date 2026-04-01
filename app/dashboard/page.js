@@ -34,18 +34,20 @@ export default function Dashboard() {
   const [modal, setModal] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [category, setCategory] = useState("");
+  const [productCategory, setProductCategory] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [categoryToDelete, setCategoryToDelete] = useState("");
   const [revenue, setRevenue] = useState([]);
   const [search, setSearch] = useState("");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [dropdownOpen, setDropdownOpen] = useState({});
   const [openManage, setOpenManage] = useState(false);
   const router = useRouter();
+
+  const canManage = role && role !== "staff";
 
   // Auth protection
   useEffect(() => {
@@ -87,57 +89,6 @@ export default function Dashboard() {
   };
 
   // Category Dropdown
-  function CategoryDropdown({ categories, value, onChange, placeholder, id }) {
-    const toggle = () =>
-      setDropdownOpen((prev) => ({ ...prev, [id]: !prev[id] }));
-
-    const selected = categories.find((c) => c.id === value);
-    const open = dropdownOpen[id] || false;
-
-    return (
-      <div className="relative w-full">
-        {/* BUTTON */}
-        <div
-          onClick={toggle}
-          className="form-input flex justify-between items-center cursor-pointer"
-        >
-          <span className="truncate">
-            {selected ? selected.name : placeholder}
-          </span>
-
-          <svg
-            className={`w-4 h-4 transition-transform ${
-              open ? "rotate-180" : ""
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-
-        {/* DROPDOWN */}
-        {open && (
-          <div className="absolute left-0 top-full mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-[9999] max-h-60 overflow-auto">
-            {categories.map((c) => (
-              <div
-                key={c.id}
-                onClick={() => {
-                  onChange(c.id);
-                  toggle();
-                }}
-                className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-              >
-                {c.name}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
   // Actions
   const deleteCategory = async (id) => {
     try {
@@ -149,7 +100,7 @@ export default function Dashboard() {
       const json = await res.json();
       if (res.ok && !json.error) {
         toast.success("Category deleted");
-        setSelectedCategory("");
+        setCategoryToDelete("");
         loadCategories();
         loadProducts();
       } else {
@@ -182,7 +133,7 @@ export default function Dashboard() {
         body: JSON.stringify({
           name,
           price: Number(price),
-          category_id: category || null,
+          category_id: productCategory || null,
           user: session?.user,
         }),
       });
@@ -192,6 +143,7 @@ export default function Dashboard() {
       } else {
         setName("");
         setPrice("");
+        setProductCategory("");
         toast.success("Product added");
         loadProducts();
       }
@@ -237,11 +189,11 @@ export default function Dashboard() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      const email = session?.user?.email;
-      if (!email) return;
-      const res = await fetch(`/api/users?email=${email}`);
+      const userId = session?.user?.id;
+      if (!userId) return;
+      const res = await fetch(`/api/users?id=${userId}`);
       const json = await res.json();
-      setRole(json.role);
+      setRole(json.role ?? null);
     };
     getRole();
   }, []);
@@ -265,7 +217,7 @@ export default function Dashboard() {
   const filteredProducts = products.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) &&
-      (!selectedCategory || p.category_id === selectedCategory),
+      (!filterCategory || p.category_id === filterCategory),
   );
   const totalStock = products.reduce(
     (sum, p) => sum + (p.inventory?.stock || 0),
@@ -393,7 +345,7 @@ export default function Dashboard() {
       </div>
 
       {/* MANAGEMENT */}
-      {role === "admin" && (
+      {canManage && (
         <div className="rounded-3xl bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl overflow-visible relative z-10">
           {/* HEADER CLICK */}
           <div
@@ -418,9 +370,9 @@ export default function Dashboard() {
           <div
             className={`transition-all duration-300 ${
               openManage
-                ? "max-h-[1000px] p-6 pt-0 opacity-100"
-                : "max-h-0 opacity-0"
-            } overflow-visible`}
+                ? "max-h-[1000px] p-6 pt-0 opacity-100 pointer-events-auto"
+                : "max-h-0 p-0 opacity-0 pointer-events-none"
+            } overflow-hidden`}
           >
             <form
               onSubmit={(e) => {
@@ -442,15 +394,20 @@ export default function Dashboard() {
                 onChange={(e) => setPrice(e.target.value)}
                 className="form-input"
               />
-              <CategoryDropdown
-                categories={categories}
-                value={category}
-                onChange={setCategory}
-                placeholder="Category"
-                id="add-cat"
-              />
+              <select
+                value={productCategory}
+                onChange={(e) => setProductCategory(e.target.value)}
+                className="form-input"
+              >
+                <option value="">Category</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
 
-              <button className="btn-primary md:col-span-3">
+              <button className="btn-primary md:col-span-3" type="submit">
                 ➕ Add Product
               </button>
             </form>
@@ -463,22 +420,28 @@ export default function Dashboard() {
                   onChange={(e) => setNewCategory(e.target.value)}
                   className="form-input flex-1"
                 />
-                <button onClick={addCategory} className="btn-success">
+                <button onClick={addCategory} type="button" className="btn-success">
                   Add
                 </button>
               </div>
 
               <div className="flex gap-3">
-                <CategoryDropdown
-                  categories={categories}
-                  value={selectedCategory}
-                  onChange={setSelectedCategory}
-                  placeholder="Delete category"
-                  id="del-cat"
-                />
+                <select
+                  value={categoryToDelete}
+                  onChange={(e) => setCategoryToDelete(e.target.value)}
+                  className="form-input"
+                >
+                  <option value="">Select category to delete</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
                 <button
+                  type="button"
                   onClick={() =>
-                    selectedCategory && deleteCategory(selectedCategory)
+                    categoryToDelete && deleteCategory(categoryToDelete)
                   }
                   className="btn-danger"
                 >
@@ -496,8 +459,8 @@ export default function Dashboard() {
           <h2 className="text-2xl font-bold">📋 Products</h2>
           {/* CATEGORY DROPDOWN */}
           <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
             className="w-full md:w-52 px-3 py-2 rounded-xl border border-gray-200 bg-white/80 dark:bg-white/10 focus:ring-2 focus:ring-blue-500 outline-none"
           >
             <option value="">All Categories</option>
@@ -570,8 +533,8 @@ export default function Dashboard() {
                     QR
                   </button>
 
-                  {/* ADMIN ACTIONS */}
-                  {role === "admin" && (
+                  {/* ADMIN / non-staff ACTIONS */}
+                  {canManage && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => importStock(p)}
