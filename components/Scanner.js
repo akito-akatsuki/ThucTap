@@ -68,23 +68,40 @@ export default function Scanner({ onScan }) {
   /* =========================
      FILE SCAN
   ========================= */
+  /* =========================
+      FILE SCAN (FIXED)
+  ========================= */
   const handleFileClick = async () => {
     if (!scannerRef.current) return;
 
     try {
-      // 🔥 STOP CAMERA trước khi chọn file
+      // Dừng camera trước khi chọn file
       await scannerRef.current.stop();
     } catch (err) {
       console.log("Stop camera warning:", err);
     }
 
+    // Đăng ký một sự kiện lắng nghe duy nhất khi quay lại cửa sổ
+    const onFocusBack = () => {
+      window.removeEventListener("focus", onFocusBack);
+
+      // Đợi một chút để xem onChange có chạy không (nếu có file)
+      // Nếu sau 500ms mà không có file, khởi động lại camera
+      setTimeout(async () => {
+        if (!fileInputRef.current?.files?.length) {
+          await startCamera();
+        }
+      }, 500);
+    };
+
+    window.addEventListener("focus", onFocusBack);
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (event) => {
     const file = event.target?.files?.[0];
 
-    // Nếu user cancel file → bật lại cam
+    // Trường hợp này thường không chạy trên một số trình duyệt khi cancel
     if (!file) {
       await startCamera();
       return;
@@ -113,7 +130,7 @@ export default function Scanner({ onScan }) {
       setScanningFile(false);
       event.target.value = null;
 
-      // 🔥 START LẠI CAMERA sau khi scan xong
+      // Start lại camera sau khi xử lý xong file
       await startCamera();
     }
   };
