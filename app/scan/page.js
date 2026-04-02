@@ -16,7 +16,7 @@ export default function ScanPage() {
   const alertRef = useRef(false);
 
   const [cart, setCart] = useState([]);
-  const [scanning, setScanning] = useState(false);
+  // const [scanning, setScanning] = useState(false);
 
   // HANDLE SCAN
   useEffect(() => {
@@ -178,10 +178,10 @@ export default function ScanPage() {
   return (
     <div
       className={
-        "dashboard-page bg-gradient-to-br from-slate-50 to-indigo-50/50 dark:from-slate-950 dark:to-slate-900/70 min-h-screen py-8 px-4 sm:px-6 lg:px-8"
+        "dashboard-page bg-linear-to-br from-slate-50 to-indigo-50/50 dark:from-slate-950 dark:to-slate-900/70 min-h-screen py-8 px-4 sm:px-6 lg:px-8"
       }
     >
-      <h1 className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-gray-900 to-slate-800 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-12 animate-fade-in-up">
+      <h1 className="text-4xl lg:text-5xl font-black bg-linear-to-r from-gray-900 to-slate-800 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-12 animate-fade-in-up">
         🛒 POS Scanner
       </h1>
 
@@ -191,7 +191,7 @@ export default function ScanPage() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 flex items-center gap-3">
             📷 Scan Barcode
           </h2>
-          <div className="w-full h-96 lg:h-80 border-4 border-dashed border-gray-200/50 dark:border-slate-700/40 rounded-2xl overflow-hidden bg-gradient-to-b from-white/50 to-white/20 dark:from-slate-900/50 dark:to-slate-900/70 hover:border-emerald-300/50 transition-all duration-300">
+          <div className="w-full h-96 lg:h-80 border-4 border-dashed border-gray-200/50 dark:border-slate-700/40 rounded-2xl overflow-hidden bg-linear-to-b from-white/50 to-white/20 dark:from-slate-900/50 dark:to-slate-900/70 hover:border-emerald-300/50 transition-all duration-300">
             <Scanner onScan={handleScan} />
           </div>
           <p className="mt-6 text-sm text-gray-500 dark:text-slate-400 text-center animate-pulse">
@@ -200,9 +200,9 @@ export default function ScanPage() {
         </div>
 
         {/* INVOICE CARD */}
-        <div className="dashboard-card shadow-2xl rounded-3xl p-8 max-h-[600px] flex flex-col hover:shadow-3xl transition-all duration-500 order-1 lg:order-2">
+        <div className="dashboard-card shadow-2xl rounded-3xl p-8 max-h-150 flex flex-col hover:shadow-3xl transition-all duration-500 order-1 lg:order-2">
           <div className="dashboard-card-header mb-8">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-700 bg-clip-text text-transparent flex items-center gap-3">
+            <h2 className="text-2xl font-bold bg-linear-to-r from-emerald-600 to-green-700 bg-clip-text text-transparent flex items-center gap-3">
               🧾 Invoice ({cart.length})
             </h2>
           </div>
@@ -280,7 +280,7 @@ export default function ScanPage() {
                         {/* Remove Button */}
                         <button
                           onClick={() => removeItem(item.id)}
-                          className="w-12 h-12 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl flex items-center justify-center text-white font-bold text-lg transition-all duration-300 hover:scale-110 hover:rotate-5 active:scale-95"
+                          className="w-12 h-12 rounded-2xl bg-linear-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl flex items-center justify-center text-white font-bold text-lg transition-all duration-300 hover:scale-110 hover:rotate-5 active:scale-95"
                           title="Remove item"
                         >
                           ✕
@@ -305,10 +305,10 @@ export default function ScanPage() {
           {/* TOTAL & CHECKOUT - STICKY */}
           <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-gray-200/50 dark:border-slate-700/50 pt-8 pb-2 rounded-2xl shadow-2xl sticky bottom-0 mt-auto">
             <div className="flex items-center justify-between text-2xl font-black mb-6 px-2">
-              <span className="bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 dark:from-white dark:via-slate-300 dark:to-white bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-gray-900 via-slate-800 to-gray-900 dark:from-white dark:via-slate-300 dark:to-white bg-clip-text text-transparent">
                 Total
               </span>
-              <span className="text-emerald-700 dark:text-emerald-300 min-w-[150px] text-right">
+              <span className="text-emerald-700 dark:text-emerald-300 min-w-37.5 text-right">
                 {formatVND(total)}
               </span>
             </div>
